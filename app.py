@@ -9,7 +9,7 @@ import os
 st.set_page_config(page_title="Comparador Luz Pro", layout="wide")
 
 st.title("⚡ Comparador de Tarifas Eléctricas")
-st.markdown("Comparativa basada estrictamente en el **Subtotal** de la factura.")
+st.markdown("Esta app analiza tus facturas y busca la mejor compañía según tu consumo real.")
 
 # --- CONFIGURACIÓN DE LA BASE DE DATOS POR DEFECTO ---
 ARCHIVO_DB_POR_DEFECTO = "tarifas_companias.xlsx"
@@ -57,9 +57,24 @@ def extraer_datos(archivo_pdf):
     
     c = {k: (int(re.search(p, texto_completo, re.IGNORECASE | re.DOTALL).group(1)) if re.search(p, texto_completo, re.IGNORECASE | re.DOTALL) else 0) for k, p in patrones_kwh.items()}
     
-    # Modificado para buscar el subtotal o el total de energia y potencia (antes de impuestos)
-    match_actual = re.search(r"(?:Subtotal|Total\s+energía\s+y\s+potencia|Coste\s+de\s+la\s+Energía|Importe\s+Energía|Importe\s+factura\s+sin\s+impuestos).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE | re.DOTALL)
-    importe_actual = float(match_actual.group(1).replace(',', '.')) if match_actual else 0.0
+    # --- EXTRACCIÓN DE IMPORTES ANTES DE IMPUESTOS ---
+    # Buscamos términos de potencia, energía y excedentes en euros
+    match_p_euro = re.search(r"(?:Término\s+potencia|Facturación\s+potencia).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
+    match_e_euro = re.search(r"(?:Término\s+energía|Facturación\s+energía).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
+    match_exc_euro = re.search(r"(?:Excedentes|Energía\s+vertida|Valoración\s+excedentes).*?(-?\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
+
+    imp_p = float(match_p_euro.group(1).replace(',', '.')) if match_p_euro else 0.0
+    imp_e = float(match_e_euro.group(1).replace(',', '.')) if match_e_euro else 0.0
+    imp_exc = float(match_exc_euro.group(1).replace(',', '.')) if match_exc_euro else 0.0
+    
+    # El importe real es la suma de potencia + energía (que ya suele incluir el signo negativo si es excedente)
+    # Si imp_exc no se detectó por separado, la suma de P + E suele ser el subtotal
+    importe_actual = round(imp_p + imp_e + imp_exc, 2)
+    
+    # Backup: Si la suma da 0, intentamos buscar el "Subtotal" o "Base Imponible" directamente
+    if importe_actual == 0:
+        match_subtotal = re.search(r"(?:Subtotal|Base\s+imponible|Suma\s+conceptos).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
+        importe_actual = float(match_subtotal.group(1).replace(',', '.')) if match_subtotal else 0.0
         
     return {
         "archivo": archivo_pdf.name, 
@@ -85,9 +100,9 @@ if df_raw is not None and archivos_pdf:
         d = extraer_datos(pdf)
         exc_kwh = abs(d['consumos']['Excedentes'])
         
-        # Factura Real
+        # Factura Real (Ahora calculada antes de impuestos)
         ranking.append({
-            "Archivo": d['archivo'], "Fecha": d['fecha'], "Compañía": "🏠 ACTUAL (PDF)",
+            "Archivo": d['archivo'], "Fecha": d['fecha'], "Compañía": "🏠 ACTUAL (Subtotal)",
             "Punta": d['consumos']['Punta'], "Llano": d['consumos']['Llano'], "Valle": d['consumos']['Valle'],
             "Exc": exc_kwh, "TOTAL (€)": d['importe_real']
         })
@@ -97,8 +112,8 @@ if df_raw is not None and archivos_pdf:
             try:
                 p_pot = float(fila['Pot_P1']) + float(fila['Pot_P2'])
                 coste_fijo = d['potencia'] * d['dias'] * p_pot
-                coste_var = (d['consumos']['Punta'] * float(fila['Ene_Punta']) +
-                             d['consumos']['Llano'] * float(fila['Ene_Llano']) +
+                coste_var = (d['consumos']['Punta'] * float(fila['Ene_Punta']) + 
+                             d['consumos']['Llano'] * float(fila['Ene_Llano']) + 
                              d['consumos']['Valle'] * float(fila['Ene_Valle']))
                 total = coste_fijo + coste_var - (exc_kwh * float(fila['Precio_Exc']))
                 
@@ -110,7 +125,7 @@ if df_raw is not None and archivos_pdf:
             except: continue
 
     df_final = pd.DataFrame(ranking).sort_values(by=["Archivo", "TOTAL (€)"])
-    st.write("### 📊 Resultados de la comparativa")
+    st.write("### 📊 Resultados de la comparativa (Precios sin Impuestos)")
     st.dataframe(df_final, use_container_width=True)
 
     buffer = io.BytesIO()
