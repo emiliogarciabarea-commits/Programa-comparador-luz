@@ -23,7 +23,7 @@ else:
     subida = st.sidebar.file_uploader("Sube el Excel de Tarifas", type=["xlsx"])
     if subida: df_raw = pd.read_excel(subida, header=1)
 
-# --- FUNCIÓN DE EXTRACCIÓN MEJORADA PARA ENDESA/NATURGY ---
+# --- FUNCIÓN DE EXTRACCIÓN DE PRECISIÓN ---
 def extraer_datos(archivo_pdf):
     texto_completo = ""
     with pdfplumber.open(archivo_pdf) as pdf:
@@ -38,32 +38,29 @@ def extraer_datos(archivo_pdf):
     m_dias = re.search(r"(\d+)\s*días", texto_completo, re.IGNORECASE)
     dias = int(m_dias.group(1)) if m_dias else 30
 
-    # B. Potencia (kW)
+    # B. Potencia (Número seguido de kW)
     m_pot = re.search(r"(\d+[.,]\d+|\d+)\s*kW(?!h)", texto_completo, re.IGNORECASE)
     potencia = float(m_pot.group(1).replace(',', '.')) if m_pot else 3.3
 
-    # C. CONSUMOS (Búsqueda específica en el desglose de energía)
-    # Buscamos patrones que eviten capturar el consumo TOTAL del resumen
+    # C. CONSUMOS (Búsqueda por etiqueta y unidad kWh inmediata)
     def buscar_consumo(etiquetas, texto):
         for etiqueta in etiquetas:
-            # Buscamos el patrón que incluya el valor numérico antes de 'kWh'
-            # Específicamente buscamos después de P1 (punta), etc.
-            patron = re.compile(etiqueta + r".*?(\d+[.,]\d+|\d+)\s*kWh", re.IGNORECASE | re.DOTALL)
+            # Buscamos la etiqueta y el primer número que tenga 'kWh' pegado o muy cerca
+            # El patrón [.,]\d{2,3} asegura que capturemos consumos con decimales
+            patron = re.compile(etiqueta + r".*?(\d+[.,]\d+)\s*kWh", re.IGNORECASE | re.DOTALL)
             match = patron.search(texto)
             if match:
-                val = float(match.group(1).replace(',', '.'))
-                # Evitamos capturar el total (124.47) si ya sabemos que es la suma
-                return val
+                return float(match.group(1).replace(',', '.'))
         return 0.0
 
     consumos = {
-        "Punta": buscar_consumo([r"P1\s*\(punta\)", r"Consumo electricidad Punta"], texto_completo),
-        "Llano": buscar_consumo([r"P2\s*\(llano\)", r"Consumo electricidad Llano"], texto_completo),
-        "Valle": buscar_consumo([r"P3\s*\(valle\)", r"Consumo electricidad Valle"], texto_completo),
+        "Punta": buscar_consumo([r"P1", r"Consumo electricidad Punta"], texto_completo),
+        "Llano": buscar_consumo([r"P2", r"Consumo electricidad Llano"], texto_completo),
+        "Valle": buscar_consumo([r"P3", r"Consumo electricidad Valle"], texto_completo),
         "Excedentes": buscar_consumo([r"Excedentes", r"Energía vertida"], texto_completo)
     }
 
-    # D. Importe Neto (Potencia + Energía de la factura)
+    # D. Importe Neto (Potencia + Energía antes de impuestos)
     m_p = re.search(r"(?:potencia contratada|Facturación por potencia).*?(\d+[.,]\d+)", texto_completo, re.IGNORECASE)
     m_e = re.search(r"(?:energía consumida|Facturación por energía).*?(\d+[.,]\d+)", texto_completo, re.IGNORECASE)
     
@@ -86,24 +83,30 @@ if df_raw is not None and pdfs:
 
     res = []
     for pdf in pdfs:
-        d = extraer_datos(pdf)
-        # Fila Actual (Neto extraído)
-        res.append({
-            "Archivo": d['archivo'], "Compañía": "🏠 ACTUAL (NETO PDF)",
-            "Punta": d['consumos']['Punta'], "Llano": d['consumos']['Llano'], 
-            "Valle": d['consumos']['Valle'], "COSTO NETO (€)": d['neto_real']
-        })
-        # Simulaciones
-        for _, fila in df_tarifas.iterrows():
-            fijo = d['potencia'] * d['dias'] * (float(fila['Pot_P1']) + float(fila['Pot_P2']))
-            var = (d['consumos']['Punta'] * float(fila['Ene_Punta']) + 
-                   d['consumos']['Llano'] * float(fila['Ene_Llano']) + 
-                   d['consumos']['Valle'] * float(fila['Ene_Valle']))
-            exc = abs(d['consumos']['Excedentes']) * float(fila['Precio_Exc'])
+        try:
+            d = extraer_datos(pdf)
+            # Fila Real (Extraída del PDF)
             res.append({
-                "Archivo": d['archivo'], "Compañía": str(fila['Compania']),
+                "Archivo": d['archivo'], "Compañía": "🏠 ACTUAL (NETO PDF)",
+                "Potencia": d['potencia'],
                 "Punta": d['consumos']['Punta'], "Llano": d['consumos']['Llano'], 
-                "Valle": d['consumos']['Valle'], "COSTO NETO (€)": round(fijo + var - exc, 2)
+                "Valle": d['consumos']['Valle'], "COSTO NETO (€)": d['neto_real']
             })
+            # Simulaciones
+            for _, fila in df_tarifas.iterrows():
+                fijo = d['potencia'] * d['dias'] * (float(fila['Pot_P1']) + float(fila['Pot_P2']))
+                var = (d['consumos']['Punta'] * float(fila['Ene_Punta']) + 
+                       d['consumos']['Llano'] * float(fila['Ene_Llano']) + 
+                       d['consumos']['Valle'] * float(fila['Ene_Valle']))
+                exc = abs(d['consumos']['Excedentes']) * float(fila['Precio_Exc'])
+                res.append({
+                    "Archivo": d['archivo'], "Compañía": str(fila['Compania']),
+                    "Potencia": d['potencia'],
+                    "Punta": d['consumos']['Punta'], "Llano": d['consumos']['Llano'], 
+                    "Valle": d['consumos']['Valle'], "COSTO NETO (€)": round(fijo + var - exc, 2)
+                })
+        except Exception as e:
+            st.error(f"Error procesando {pdf.name}: {e}")
 
-    st.dataframe(pd.DataFrame(res).sort_values(by=["Archivo", "COSTO NETO (€)"]), use_container_width=True)
+    if res:
+        st.dataframe(pd.DataFrame(res).sort_values(by=["Archivo", "COSTO NETO (€)"]), use_container_width=True)
