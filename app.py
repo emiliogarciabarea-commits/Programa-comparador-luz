@@ -57,21 +57,20 @@ def extraer_datos(archivo_pdf):
     
     c = {k: (int(re.search(p, texto_completo, re.IGNORECASE | re.DOTALL).group(1)) if re.search(p, texto_completo, re.IGNORECASE | re.DOTALL) else 0) for k, p in patrones_kwh.items()}
     
-    # --- MODIFICACIÓN PARA FACTURA ANTES DE IMPUESTOS ---
-    # Extraemos el coste de potencia y el coste de energía (Base Imponible)
-    m_p_euro = re.search(r"(?:Término potencia|Facturación por potencia|Potencia contratada).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
-    m_e_euro = re.search(r"(?:Término energía|Facturación por energía|Energía consumida|Consumo electricidad).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
+    # --- LÓGICA PARA EXTRAER EL SUBTOTAL ANTES DE IMPUESTOS ---
+    # Buscamos el subtotal de potencia y el subtotal de energía
+    match_p_euro = re.search(r"(?:Término potencia|Facturación por potencia|Potencia contratada).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
+    match_e_euro = re.search(r"(?:Término energía|Facturación por energía|Energía consumida|Consumo electricidad).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
     
-    val_p = float(m_p_euro.group(1).replace(',', '.')) if m_p_euro else 0.0
-    val_e = float(m_e_euro.group(1).replace(',', '.')) if m_e_euro else 0.0
+    val_p = float(match_p_euro.group(1).replace(',', '.')) if m_p_euro else 0.0
+    val_e = float(match_e_euro.group(1).replace(',', '.')) if m_e_euro else 0.0
     
-    # El importe real ahora es la suma base (Sin Impuestos)
-    importe_actual = round(val_p + val_e, 2)
+    subtotal_actual = round(val_p + val_e, 2)
     
-    # Si la suma es 0, intentamos capturar la "Base imponible" directamente
-    if importe_actual == 0:
-        match_base = re.search(r"(?:Base imponible|Subtotal|Suma de conceptos).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
-        importe_actual = float(match_base.group(1).replace(',', '.')) if match_base else 0.0
+    # Si la suma es 0 (no encontró términos específicos), buscamos la palabra Subtotal o Base Imponible
+    if subtotal_actual == 0:
+        match_subtotal = re.search(r"(?:Subtotal|Base imponible|Suma de conceptos).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
+        subtotal_actual = float(match_subtotal.group(1).replace(',', '.')) if match_subtotal else 0.0
         
     return {
         "archivo": archivo_pdf.name, 
@@ -79,7 +78,7 @@ def extraer_datos(archivo_pdf):
         "dias": dias_val, 
         "potencia": pot_val, 
         "consumos": c, 
-        "importe_real": importe_actual
+        "importe_real": subtotal_actual
     }
 
 # --- INTERFAZ ---
@@ -97,9 +96,9 @@ if df_raw is not None and archivos_pdf:
         d = extraer_datos(pdf)
         exc_kwh = abs(d['consumos']['Excedentes'])
         
-        # Factura Real
+        # Factura Real (Mostrando el SUBTOTAL extraído)
         ranking.append({
-            "Archivo": d['archivo'], "Fecha": d['fecha'], "Compañía": "🏠 ACTUAL (Sin Impuestos)",
+            "Archivo": d['archivo'], "Fecha": d['fecha'], "Compañía": "🏠 ACTUAL (SUBTOTAL)",
             "Punta": d['consumos']['Punta'], "Llano": d['consumos']['Llano'], "Valle": d['consumos']['Valle'],
             "Exc": exc_kwh, "TOTAL (€)": d['importe_real']
         })
@@ -122,7 +121,7 @@ if df_raw is not None and archivos_pdf:
             except: continue
 
     df_final = pd.DataFrame(ranking).sort_values(by=["Archivo", "TOTAL (€)"])
-    st.write("### 📊 Resultados de la comparativa (Base Imponible)")
+    st.write("### 📊 Resultados de la comparativa (Precios sin impuestos)")
     st.dataframe(df_final, use_container_width=True)
 
     buffer = io.BytesIO()
