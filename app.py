@@ -4,12 +4,29 @@ import pdfplumber
 import pandas as pd
 import re
 import io
+import os
 
 st.set_page_config(page_title="Comparador Luz Pro", layout="wide")
 
 st.title("⚡ Comparador de Tarifas Eléctricas")
+st.markdown("Esta app analiza tus facturas y busca la mejor compañía según tu consumo real.")
 
-# --- FUNCIÓN DE EXTRACCIÓN CORREGIDA ---
+# --- CONFIGURACIÓN DE LA BASE DE DATOS POR DEFECTO ---
+ARCHIVO_DB_POR_DEFECTO = "tarifas_companias.xlsx"
+
+# Intentar cargar el archivo automáticamente
+if os.path.exists(ARCHIVO_DB_POR_DEFECTO):
+    df_raw = pd.read_excel(ARCHIVO_DB_POR_DEFECTO, header=1)
+    st.sidebar.success(f"✅ Base de datos '{ARCHIVO_DB_POR_DEFECTO}' cargada por defecto.")
+else:
+    st.sidebar.warning("⚠️ No se encontró la base de datos por defecto.")
+    archivo_subido = st.sidebar.file_uploader("Sube tu Excel de Tarifas manualmente", type=["xlsx"])
+    if archivo_subido:
+        df_raw = pd.read_excel(archivo_subido, header=1)
+    else:
+        df_raw = None
+
+# --- FUNCIÓN DE EXTRACCIÓN ---
 def extraer_datos(archivo_pdf):
     texto_completo = ""
     with pdfplumber.open(archivo_pdf) as pdf:
@@ -18,19 +35,19 @@ def extraer_datos(archivo_pdf):
             if texto_content:
                 texto_completo += texto_content + "\n"
 
-    # Extracción de Fecha
+    # Regex para Fecha
     match_fecha = re.search(r"(\d{2}/\d{2}/\d{4})", texto_completo)
     fecha_val = match_fecha.group(1) if match_fecha else "S/D"
 
-    # Extracción de Días
+    # Regex para Días
     match_dias = re.search(r"Potencia\s+P1.*?kW.*?(\d+)\s*días", texto_completo, re.IGNORECASE)
     dias_val = int(match_dias.group(1)) if match_dias else 30
 
-    # Extracción de Potencia
+    # Regex para Potencia
     match_potencia = re.search(r"Potencia\s+P1\s*(\d+[.,]\d+|\d+)\s*kW", texto_completo, re.IGNORECASE)
     pot_val = float(match_potencia.group(1).replace(',', '.')) if match_potencia else 4.6
 
-    # Extracción de Consumos
+    # Regex para Consumos
     patrones_kwh = {
         "Punta": r"consumo\s+electricidad\s+punta.*?(\d+)\s*kWh",
         "Llano": r"consumo\s+electricidad\s+llano.*?(\d+)\s*kWh",
@@ -53,14 +70,10 @@ def extraer_datos(archivo_pdf):
     }
 
 # --- INTERFAZ ---
-st.sidebar.header("1. Configuración")
-archivo_db = st.sidebar.file_uploader("Sube tu Excel de Tarifas", type=["xlsx"])
+st.header("Sube tus facturas PDF")
+archivos_pdf = st.file_uploader("Selecciona uno o varios PDFs", type=["pdf"], accept_multiple_files=True)
 
-st.header("2. Sube tus facturas PDF")
-archivos_pdf = st.file_uploader("Puedes seleccionar varios", type=["pdf"], accept_multiple_files=True)
-
-if archivo_db and archivos_pdf:
-    df_raw = pd.read_excel(archivo_db, header=1)
+if df_raw is not None and archivos_pdf:
     df_tarifas = df_raw.iloc[:, [0, 1, 2, 3, 4, 5, 6]].copy()
     df_tarifas.columns = ['Compania', 'Pot_P1', 'Pot_P2', 'Ene_Punta', 'Ene_Llano', 'Ene_Valle', 'Precio_Exc']
     df_tarifas = df_tarifas.dropna(subset=['Compania'])
@@ -96,14 +109,15 @@ if archivo_db and archivos_pdf:
             except: continue
 
     df_final = pd.DataFrame(ranking).sort_values(by=["Archivo", "TOTAL (€)"])
-    st.write("### 📊 Comparativa de resultados")
+    st.write("### 📊 Resultados de la comparativa")
     st.dataframe(df_final, use_container_width=True)
 
-    # Exportar a Excel
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
         df_final.to_excel(writer, index=False)
-    st.download_button("📥 Descargar Tabla en Excel", data=buffer.getvalue(), file_name="comparativa_luz.xlsx")
+    st.download_button("📥 Descargar reporte en Excel", data=buffer.getvalue(), file_name="comparativa_luz.xlsx")
 
+elif df_raw is None:
+    st.error("No hay base de datos cargada. Sube el archivo Excel en el lateral.")
 else:
-    st.info("Sube el Excel en el lateral y los PDFs aquí para empezar.")
+    st.info("Sube tus facturas PDF para ver la comparativa.")
