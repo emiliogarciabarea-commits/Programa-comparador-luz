@@ -1,139 +1,145 @@
 
-import streamlit as st
 import pdfplumber
-import pandas as pd
 import re
+import pandas as pd
+import streamlit as st
 import io
 import os
 
-st.set_page_config(page_title="Comparador Luz Pro", layout="wide")
-
-st.title("⚡ Comparador de Tarifas Eléctricas")
-st.markdown("Esta app analiza tus facturas y busca la mejor compañía según tu consumo real.")
-
-# --- CONFIGURACIÓN DE LA BASE DE DATOS POR DEFECTO ---
-ARCHIVO_DB_POR_DEFECTO = "tarifas_companias.xlsx"
-
-# Intentar cargar el archivo automáticamente
-if os.path.exists(ARCHIVO_DB_POR_DEFECTO):
-    df_raw = pd.read_excel(ARCHIVO_DB_POR_DEFECTO, header=1)
-    st.sidebar.success(f"✅ Base de datos '{ARCHIVO_DB_POR_DEFECTO}' cargada por defecto.")
-else:
-    st.sidebar.warning("⚠️ No se encontró la base de datos por defecto.")
-    archivo_subido = st.sidebar.file_uploader("Sube tu Excel de Tarifas manualmente", type=["xlsx"])
-    if archivo_subido:
-        df_raw = pd.read_excel(archivo_subido, header=1)
-    else:
-        df_raw = None
-
-# --- FUNCIÓN DE EXTRACCIÓN ---
-def extraer_datos(archivo_pdf):
+def extraer_datos_factura(pdf_path):
     texto_completo = ""
-    with pdfplumber.open(archivo_pdf) as pdf:
+    with pdfplumber.open(pdf_path) as pdf:
         for pagina in pdf.pages:
-            texto_content = pagina.extract_text()
-            if texto_content:
-                texto_completo += texto_content + "\n"
+            texto_completo += pagina.extract_text() + "\n"
 
-    # Regex para Fecha
-    match_fecha = re.search(r"(\d{2}/\d{2}/\d{4})", texto_completo)
-    fecha_val = match_fecha.group(1) if match_fecha else "S/D"
-
-    # Regex para Días
-    match_dias = re.search(r"Potencia\s+P1.*?kW.*?(\d+)\s*días", texto_completo, re.IGNORECASE)
-    dias_val = int(match_dias.group(1)) if match_dias else 30
-
-    # Regex para Potencia
-    match_potencia = re.search(r"Potencia\s+P1\s*(\d+[.,]\d+|\d+)\s*kW", texto_completo, re.IGNORECASE)
-    pot_val = float(match_potencia.group(1).replace(',', '.')) if match_potencia else 4.6
-
-    # Regex para Consumos
-    patrones_kwh = {
-        "Punta": r"consumo\s+electricidad\s+punta.*?(\d+)\s*kWh",
-        "Llano": r"consumo\s+electricidad\s+llano.*?(\d+)\s*kWh",
-        "Valle": r"consumo\s+electricidad\s+valle.*?(\d+)\s*kWh",
-        "Excedentes": r"(?:Excedentes|Energía\s+vertida|Valoración\s+excedentes).*?(-?\d+)\s*kWh"
+    # 1. Búsqueda de Consumos
+    patrones_consumo = {
+        'punta': [r'Consumo\s+en\s+P1:?\s*([\d,.]+)\s*kWh', r'Consumo\s+electricidad\s+Punta\s*([\d,.]+)\s*kWh'],
+        'llano': [r'Consumo\s+en\s+P2:?\s*([\d,.]+)\s*kWh', r'Consumo\s+electricidad\s+Llano\s*([\d,.]+)\s*kWh'],
+        'valle': [r'Consumo\s+en\s+P3:?\s*([\d,.]+)\s*kWh', r'Consumo\s+electricidad\s+Valle\s*([\d,.]+)\s*kWh']
     }
     
-    c = {k: (int(re.search(p, texto_completo, re.IGNORECASE | re.DOTALL).group(1)) if re.search(p, texto_completo, re.IGNORECASE | re.DOTALL) else 0) for k, p in patrones_kwh.items()}
-    
-    # --- EXTRACCIÓN DE IMPORTES ANTES DE IMPUESTOS ---
-    # Buscamos términos de potencia, energía y excedentes en euros
-    match_p_euro = re.search(r"(?:Término\s+potencia|Facturación\s+potencia).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
-    match_e_euro = re.search(r"(?:Término\s+energía|Facturación\s+energía).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
-    match_exc_euro = re.search(r"(?:Excedentes|Energía\s+vertida|Valoración\s+excedentes).*?(-?\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
+    consumos = {}
+    for tramo, patrones in patrones_consumo.items():
+        consumos[tramo] = 0.0
+        for patron in patrones:
+            match = re.search(patron, texto_completo, re.IGNORECASE)
+            if match:
+                consumos[tramo] = float(match.group(1).replace(',', '.'))
+                break
 
-    imp_p = float(match_p_euro.group(1).replace(',', '.')) if match_p_euro else 0.0
-    imp_e = float(match_e_euro.group(1).replace(',', '.')) if match_e_euro else 0.0
-    imp_exc = float(match_exc_euro.group(1).replace(',', '.')) if match_exc_euro else 0.0
+    # 2. Búsqueda de Potencia
+    patron_potencia = r'(?:Potencia\s+contratada(?:\s+en\s+punta-llano|\s+P1)?):\s*([\d,.]+)\s*kW'
+    match_potencia = re.search(patron_potencia, texto_completo, re.IGNORECASE)
+    potencia = float(match_potencia.group(1).replace(',', '.')) if match_potencia else 0.0
+
+    # 3. Fecha y Días
+    patron_fecha = r'(?:emitida\s+el|Fecha\s+de\s+emisión:)\s*([\d/]+\s*(?:de\s+\w+\s+de\s+)?\d{2,4})'
+    match_fecha = re.search(patron_fecha, texto_completo, re.IGNORECASE)
+    fecha = match_fecha.group(1) if match_fecha else "No encontrada"
+
+    patron_dias = r'(\d+)\s*días'
+    match_dias = re.search(patron_dias, texto_completo)
+    dias = int(match_dias.group(1)) if match_dias else 0
+
+    # 4. Excedentes
+    patron_excedente = r'Valoración\s+excedentes\s*(?:-?\d+[\d,.]*\s*€/kWh)?\s*(-?\d+[\d,.]*)\s*kWh'
+    match_excedente = re.search(patron_excedente, texto_completo, re.IGNORECASE)
+    excedente = abs(float(match_excedente.group(1).replace(',', '.'))) if match_excedente else 0.0
     
-    # El importe real es la suma de potencia + energía (que ya suele incluir el signo negativo si es excedente)
-    # Si imp_exc no se detectó por separado, la suma de P + E suele ser el subtotal
-    importe_actual = round(imp_p + imp_e + imp_exc, 2)
+    # --- Lógica específica de Factura Actual (Fila 0) ---
+    total_real = 0.0
+    es_xxi = re.search(r'Comercializadora\s+de\s+Referencia\s+Energética\s+por\s+XXI|Energía\s+XXI', texto_completo, re.IGNORECASE)
     
-    # Backup: Si la suma da 0, intentamos buscar el "Subtotal" o "Base Imponible" directamente
-    if importe_actual == 0:
-        match_subtotal = re.search(r"(?:Subtotal|Base\s+imponible|Suma\s+conceptos).*?(\d+[.,]\d+)\s*€", texto_completo, re.IGNORECASE)
-        importe_actual = float(match_subtotal.group(1).replace(',', '.')) if match_subtotal else 0.0
-        
+    if es_xxi:
+        patron_pot_xxi = r'por\s+potencia\s+contratada\s*([\d,.]+)\s*€'
+        patron_ene_xxi = r'por\s+energía\s+consumida\s*([\d,.]+)\s*€'
+        m_pot = re.search(patron_pot_xxi, texto_completo, re.IGNORECASE)
+        m_ene = re.search(patron_ene_xxi, texto_completo, re.IGNORECASE)
+        val_pot = float(m_pot.group(1).replace(',', '.')) if m_pot else 0.0
+        val_ene = float(m_ene.group(1).replace(',', '.')) if m_ene else 0.0
+        total_real = val_pot + val_ene
+    else:
+        patron_total = r'(?:Subtotal|Importe\s+total|Total\s+factura)\s*:?\s*([\d,.]+)\s*€'
+        match_total = re.search(patron_total, texto_completo, re.IGNORECASE)
+        total_real = float(match_total.group(1).replace(',', '.')) if match_total else 0.0
+
     return {
-        "archivo": archivo_pdf.name, 
-        "fecha": fecha_val, 
-        "dias": dias_val, 
-        "potencia": pot_val, 
-        "consumos": c, 
-        "importe_real": importe_actual
+        "Fecha": fecha, "Días": dias, "Potencia (kW)": potencia,
+        "Consumo Punta (kWh)": consumos['punta'], "Consumo Llano (kWh)": consumos['llano'],
+        "Consumo Valle (kWh)": consumos['valle'], "Excedente (kWh)": excedente,
+        "Total Real": total_real
     }
 
-# --- INTERFAZ ---
-st.header("Sube tus facturas PDF")
-archivos_pdf = st.file_uploader("Selecciona uno o varios PDFs", type=["pdf"], accept_multiple_files=True)
+# --- INTERFAZ STREAMLIT ---
+st.title("Comparador de Facturas Eléctricas")
 
-if df_raw is not None and archivos_pdf:
-    df_tarifas = df_raw.iloc[:, [0, 1, 2, 3, 4, 5, 6]].copy()
-    df_tarifas.columns = ['Compania', 'Pot_P1', 'Pot_P2', 'Ene_Punta', 'Ene_Llano', 'Ene_Valle', 'Precio_Exc']
-    df_tarifas = df_tarifas.dropna(subset=['Compania'])
+# Carga automática del Excel desde el repositorio
+excel_path = "tarifas_companias.xlsx"
 
-    ranking = []
-
-    for pdf in archivos_pdf:
-        d = extraer_datos(pdf)
-        exc_kwh = abs(d['consumos']['Excedentes'])
-        
-        # Factura Real (Ahora calculada antes de impuestos)
-        ranking.append({
-            "Archivo": d['archivo'], "Fecha": d['fecha'], "Compañía": "🏠 ACTUAL (Subtotal)",
-            "Punta": d['consumos']['Punta'], "Llano": d['consumos']['Llano'], "Valle": d['consumos']['Valle'],
-            "Exc": exc_kwh, "TOTAL (€)": d['importe_real']
-        })
-
-        # Comparativa
-        for _, fila in df_tarifas.iterrows():
-            try:
-                p_pot = float(fila['Pot_P1']) + float(fila['Pot_P2'])
-                coste_fijo = d['potencia'] * d['dias'] * p_pot
-                coste_var = (d['consumos']['Punta'] * float(fila['Ene_Punta']) + 
-                             d['consumos']['Llano'] * float(fila['Ene_Llano']) + 
-                             d['consumos']['Valle'] * float(fila['Ene_Valle']))
-                total = coste_fijo + coste_var - (exc_kwh * float(fila['Precio_Exc']))
-                
-                ranking.append({
-                    "Archivo": d['archivo'], "Fecha": d['fecha'], "Compañía": str(fila['Compania']),
-                    "Punta": d['consumos']['Punta'], "Llano": d['consumos']['Llano'], "Valle": d['consumos']['Valle'],
-                    "Exc": exc_kwh, "TOTAL (€)": round(total, 2)
-                })
-            except: continue
-
-    df_final = pd.DataFrame(ranking).sort_values(by=["Archivo", "TOTAL (€)"])
-    st.write("### 📊 Resultados de la comparativa (Precios sin Impuestos)")
-    st.dataframe(df_final, use_container_width=True)
-
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-        df_final.to_excel(writer, index=False)
-    st.download_button("📥 Descargar reporte en Excel", data=buffer.getvalue(), file_name="comparativa_luz.xlsx")
-
-elif df_raw is None:
-    st.error("No hay base de datos cargada. Sube el archivo Excel en el lateral.")
+if not os.path.exists(excel_path):
+    st.error(f"No se encuentra el archivo '{excel_path}' en el repositorio de GitHub.")
 else:
-    st.info("Sube tus facturas PDF para ver la comparativa.")
+    # Subida manual de PDFs
+    uploaded_files = st.file_uploader("Sube tus facturas PDF", type="pdf", accept_multiple_files=True)
+
+    if uploaded_files:
+        datos_facturas = []
+        for uploaded_file in uploaded_files:
+            try:
+                res = extraer_datos_factura(io.BytesIO(uploaded_file.read()))
+                res['Archivo'] = uploaded_file.name
+                datos_facturas.append(res)
+            except Exception as e:
+                st.error(f"Error procesando {uploaded_file.name}: {e}")
+
+        if datos_facturas:
+            df_resumen_pdfs = pd.DataFrame(datos_facturas)
+            st.subheader("Datos Extraídos de los PDFs")
+            st.write(df_resumen_pdfs[['Archivo', 'Fecha', 'Días', 'Potencia (kW)', 'Consumo Punta (kWh)', 'Consumo Llano (kWh)', 'Consumo Valle (kWh)', 'Excedente (kWh)']])
+
+            # Leer tarifas desde el Excel precargado
+            df_tarifas = pd.read_excel(excel_path)
+            
+            resultados_finales = []
+
+            # Fila 0: Factura Actual
+            for _, fact in df_resumen_pdfs.iterrows():
+                resultados_finales.append({
+                    "Compañía/Tarifa": "--- FACTURA ACTUAL (Referencia) ---",
+                    "Factura": fact['Archivo'],
+                    "Coste (€)": fact['Total Real']
+                })
+
+            # Cálculos comparativos
+            for index, tarifa in df_tarifas.iterrows():
+                try:
+                    nombre_cia = tarifa.iloc[0]
+                    b_pot1 = pd.to_numeric(tarifa.iloc[1], errors='coerce')
+                    c_pot2 = pd.to_numeric(tarifa.iloc[2], errors='coerce')
+                    d_punta = pd.to_numeric(tarifa.iloc[3], errors='coerce')
+                    e_llano = pd.to_numeric(tarifa.iloc[4], errors='coerce')
+                    f_valle = pd.to_numeric(tarifa.iloc[5], errors='coerce')
+                    g_excedente = pd.to_numeric(tarifa.iloc[6], errors='coerce')
+
+                    for _, fact in df_resumen_pdfs.iterrows():
+                        coste = (fact['Días'] * b_pot1 * fact['Potencia (kW)']) + \
+                                (fact['Días'] * c_pot2 * fact['Potencia (kW)']) + \
+                                (fact['Consumo Punta (kWh)'] * d_punta) + \
+                                (fact['Consumo Llano (kWh)'] * e_llano) + \
+                                (fact['Consumo Valle (kWh)'] * f_valle) - \
+                                (fact['Excedente (kWh)'] * g_excedente)
+                        
+                        resultados_finales.append({
+                            "Compañía/Tarifa": nombre_cia,
+                            "Factura": fact['Archivo'],
+                            "Coste (€)": round(coste, 2)
+                        })
+                except: continue
+
+            # Tabla final ordenada y sin NaNs
+            df_comparativa = pd.DataFrame(resultados_finales).dropna(subset=['Coste (€)'])
+            df_comparativa = df_comparativa.sort_values(by="Coste (€)", ascending=True).reset_index(drop=True)
+
+            st.subheader("Comparativa Final (Ordenada por ahorro)")
+            st.table(df_comparativa)
