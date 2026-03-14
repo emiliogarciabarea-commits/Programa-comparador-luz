@@ -2,4 +2,3 @@ pdfplumber
 pandas
 openpyxl
 streamlit
-plotly
