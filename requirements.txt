@@ -1,5 +1,5 @@
-streamlit
 pdfplumber
 pandas
 openpyxl
-xlsxwriter
+streamlit
+plotly
