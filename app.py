@@ -13,7 +13,7 @@ def extraer_datos_factura(pdf_path):
         for i, pagina in enumerate(pdf.pages):
             contenido = pagina.extract_text() + "\n"
             texto_completo += contenido
-            if i == 1:  # Guardamos la segunda página (índice 1) para Naturgy
+            if i == 1:  # Segunda página (índice 1)
                 texto_pagina_2 = contenido
 
     # --- DETECCIÓN DE TIPO DE FACTURA ---
@@ -148,11 +148,15 @@ def extraer_datos_factura(pdf_path):
         match_fecha = re.search(patron_fecha, texto_completo, re.IGNORECASE)
         fecha = match_fecha.group(1) if match_fecha else "No encontrada"
         
-        # --- CORRECCIÓN FINAL PARA NATURGY ---
+        # --- CORRECCIÓN ESPECÍFICA NATURGY ---
         if es_naturgy and texto_pagina_2:
-            # Buscamos específicamente el número de días dentro del concepto de alquiler de contador en la pág 2
-            match_dias_nat = re.search(r'Alquiler\s+de\s+contador\s+(\d+)\s+días', texto_pagina_2, re.IGNORECASE)
-            dias = int(match_dias_nat.group(1)) if match_dias_nat else 0
+            # Primero aislamos la línea del alquiler para no leer otros números sueltos
+            linea_alquiler = re.search(r'Alquiler\s+de\s+contador.*', texto_pagina_2, re.IGNORECASE)
+            if linea_alquiler:
+                match_dias_nat = re.search(r'(\d+)\s+días', linea_alquiler.group(0))
+                dias = int(match_dias_nat.group(1)) if match_dias_nat else 0
+            else:
+                dias = 0
         else:
             match_dias = re.search(r'(\d+)\s*días', texto_completo)
             dias = int(match_dias.group(1)) if match_dias else 0
@@ -175,6 +179,7 @@ def extraer_datos_factura(pdf_path):
         "Total Real": round(total_real, 2)
     }
 
+# El resto del código de Streamlit sigue igual...
 st.set_page_config(page_title="Comparador Energético", layout="wide")
 st.title("⚡ Comparador de Facturas Eléctricas Pro")
 
