@@ -48,6 +48,42 @@ def extraer_datos_factura(pdf_path):
         total_real = float(match_total.group(1).replace(',', '.')) if match_total else 0.0
         excedente = 0.0 
 
+    elif es_naturgy:
+        # Extracción de fecha (similar a Repsol/Iberdrola)
+        m_fecha = re.search(r'Fecha\s+de\s+factura:\s*([\d/]{10})', texto_completo, re.IGNORECASE)
+        fecha = m_fecha.group(1) if m_fecha else "No encontrada"
+        
+        # Extracción de Días (usando lógica de "número de días" o "periodo")
+        m_dias = re.search(r'Número\s+de\s+días:\s*(\d+)', texto_completo, re.IGNORECASE)
+        if not m_dias:
+            m_dias = re.search(r'(\d+)\s*días', texto_completo, re.IGNORECASE)
+        dias = int(m_dias.group(1)) if m_dias else 0
+
+        # Potencia
+        m_pot = re.search(r'Potencia\s+contratada.*?([\d,.]+)\s*kW', texto_completo, re.IGNORECASE | re.DOTALL)
+        potencia = float(m_pot.group(1).replace(',', '.')) if m_pot else 0.0
+
+        # Consumos
+        m_punta = re.search(r'Término\s+de\s+energía\s+Punta.*?([\d,.]+)\s*kWh', texto_completo, re.IGNORECASE | re.DOTALL)
+        m_llano = re.search(r'Término\s+de\s+energía\s+Llano.*?([\d,.]+)\s*kWh', texto_completo, re.IGNORECASE | re.DOTALL)
+        m_valle = re.search(r'Término\s+de\s+energía\s+Valle.*?([\d,.]+)\s*kWh', texto_completo, re.IGNORECASE | re.DOTALL)
+        
+        consumos = {
+            'punta': float(m_punta.group(1).replace(',', '.')) if m_punta else 0.0,
+            'llano': float(m_llano.group(1).replace(',', '.')) if m_llano else 0.0,
+            'valle': float(m_valle.group(1).replace(',', '.')) if m_valle else 0.0
+        }
+        
+        # Si no encuentra por tramos, busca el total
+        if sum(consumos.values()) == 0:
+            m_total_cons = re.search(r'Consumo\s+eléctrico.*?([\d,.]+)\s*kWh', texto_completo, re.IGNORECASE)
+            if m_total_cons: consumos['punta'] = float(m_total_cons.group(1).replace(',', '.'))
+
+        # Total Factura
+        m_total = re.search(r'Total\s+importe\s+factura.*?([\d,.]+)\s*€', texto_completo, re.IGNORECASE | re.DOTALL)
+        total_real = float(m_total.group(1).replace(',', '.')) if m_total else 0.0
+        excedente = 0.0
+
     elif es_total_energies:
         m_fecha = re.search(r'Fecha\s+emisión:\s*([\d.]{10})', texto_completo, re.IGNORECASE)
         fecha = m_fecha.group(1) if m_fecha else "No encontrada"
@@ -173,26 +209,14 @@ def extraer_datos_factura(pdf_path):
                 if match:
                     consumos[tramo] = float(match.group(1).replace(',', '.'))
                     break
-        
-        # Búsqueda de potencia
         patron_potencia = r'(?:Potencia\s+contratada(?:\s+en\s+punta-llano|\s+P1)?):\s*([\d,.]+)\s*kW'
         match_potencia = re.search(patron_potencia, texto_completo, re.IGNORECASE)
         potencia = float(match_potencia.group(1).replace(',', '.')) if match_potencia else 0.0
-        
-        # Búsqueda de fecha
         patron_fecha = r'(?:emitida\s+el|Fecha\s+de\s+emisión:)\s*([\d/]+\s*(?:de\s+\w+\s+de\s+)?\d{2,4})'
         match_fecha = re.search(patron_fecha, texto_completo, re.IGNORECASE)
         fecha = match_fecha.group(1) if match_fecha else "No encontrada"
-
-        # --- MEJORA: BÚSQUEDA DE DÍAS ESPECÍFICA DETRÁS DE TÉRMINO POTENCIA ---
-        # Busca: Término potencia ... x 20 días
-        match_dias_especifico = re.search(r'Término\s+potencia.*?x\s*(\d+)\s*días', texto_completo, re.IGNORECASE | re.DOTALL)
-        if match_dias_especifico:
-            dias = int(match_dias_especifico.group(1))
-        else:
-            match_dias = re.search(r'(\d+)\s*días', texto_completo)
-            dias = int(match_dias.group(1)) if match_dias else 0
-        
+        match_dias = re.search(r'(\d+)\s*días', texto_completo)
+        dias = int(match_dias.group(1)) if match_dias else 0
         match_excedente = re.search(r'Valoración\s+excedentes\s*(?:-?\d+[\d,.]*\s*€/kWh)?\s*(-?\d+[\d,.]*)\s*kWh', texto_completo, re.IGNORECASE)
         excedente = abs(float(match_excedente.group(1).replace(',', '.'))) if match_excedente else 0.0
         
