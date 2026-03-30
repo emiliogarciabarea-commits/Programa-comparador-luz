@@ -13,7 +13,7 @@ def extraer_datos_factura(pdf_path):
         for i, pagina in enumerate(pdf.pages):
             contenido = pagina.extract_text() + "\n"
             texto_completo += contenido
-            if i == 1:  # Guardamos la segunda página (índice 1)
+            if i == 1:  # Guardamos la segunda página (índice 1) para Naturgy
                 texto_pagina_2 = contenido
 
     # --- DETECCIÓN DE TIPO DE FACTURA ---
@@ -21,7 +21,6 @@ def extraer_datos_factura(pdf_path):
     es_iberdrola = re.search(r'IBERDROLA\s+CLIENTES', texto_completo, re.IGNORECASE)
     es_naturgy = re.search(r'Naturgy', texto_completo, re.IGNORECASE)
     es_repsol = re.search(r'repsol', texto_completo, re.IGNORECASE)
-    # Endesa Energía (Mercado Libre) no es lo mismo que Energía XXI (Referencia)
     es_endesa_luz = re.search(r'Endesa\s+Energía', texto_completo, re.IGNORECASE)
 
     if es_el_corte_ingles:
@@ -52,7 +51,6 @@ def extraer_datos_factura(pdf_path):
         excedente = 0.0 
 
     elif es_endesa_luz:
-        # 1. Fecha: Búsqueda robusta (Primero por etiqueta, luego por primer formato DD/MM/AAAA)
         m_fecha_etiqueta = re.search(r'Fecha\s+emisión\s+factura:\s*([\d/]{10})', texto_completo, re.IGNORECASE)
         if m_fecha_etiqueta:
             fecha = m_fecha_etiqueta.group(1)
@@ -60,15 +58,12 @@ def extraer_datos_factura(pdf_path):
             m_fecha_generica = re.search(r'(\d{2}/\d{2}/\d{4})', texto_completo)
             fecha = m_fecha_generica.group(1) if m_fecha_generica else "No encontrada"
 
-        # 2. Días: Número justo antes de "días"
         m_dias = re.search(r'(\d+)\s+días', texto_completo, re.IGNORECASE)
         dias = int(m_dias.group(1)) if m_dias else 0
 
-        # 3. Potencia: Justo al lado de kW en punta-llano
         m_pot = re.search(r'punta-llano\s*([\d,.]+)\s*kW', texto_completo, re.IGNORECASE)
         potencia = float(m_pot.group(1).replace(',', '.')) if m_pot else 0.0
 
-        # 4. Valor Real: Suma de Potencia y Energía (limpiando puntos y espacios rebeldes)
         def limpiar_valor_endesa(patron, texto):
             match = re.search(patron, texto, re.IGNORECASE)
             if match:
@@ -83,7 +78,6 @@ def extraer_datos_factura(pdf_path):
         val_energia = limpiar_valor_endesa(r'Energía\s+\.+\s*([\d\s.,]+)€', texto_completo)
         total_real = val_potencia + val_energia
 
-        # 5. Consumos (Punta, Llano, Valle)
         m_punta = re.search(r'Punta\s+[\d,.]+\s+[\d,.]+\s+[\d,.]+\s+[\w,.]+\s+([\d,.]+)', texto_completo, re.IGNORECASE)
         m_llano = re.search(r'Llano\s+[\d,.]+\s+[\d,.]+\s+[\d,.]+\s+[\w,.]+\s+([\d,.]+)', texto_completo, re.IGNORECASE)
         m_valle = re.search(r'Valle\s+[\d,.]+\s+[\d,.]+\s+[\d,.]+\s+[\w,.]+\s+([\d,.]+)', texto_completo, re.IGNORECASE)
@@ -154,9 +148,10 @@ def extraer_datos_factura(pdf_path):
         match_fecha = re.search(patron_fecha, texto_completo, re.IGNORECASE)
         fecha = match_fecha.group(1) if match_fecha else "No encontrada"
         
+        # --- CORRECCIÓN FINAL PARA NATURGY ---
         if es_naturgy and texto_pagina_2:
-            # Buscamos los días exclusivamente en el texto extraído de la segunda página
-            match_dias_nat = re.search(r'(\d+)\s+días', texto_pagina_2)
+            # Buscamos específicamente el número de días dentro del concepto de alquiler de contador en la pág 2
+            match_dias_nat = re.search(r'Alquiler\s+de\s+contador\s+(\d+)\s+días', texto_pagina_2, re.IGNORECASE)
             dias = int(match_dias_nat.group(1)) if match_dias_nat else 0
         else:
             match_dias = re.search(r'(\d+)\s*días', texto_completo)
