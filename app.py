@@ -182,7 +182,7 @@ def extraer_datos_factura(pdf_path):
         match_fecha = re.search(patron_fecha, texto_completo, re.IGNORECASE)
         fecha = match_fecha.group(1) if match_fecha else "No encontrada"
 
-        # BUSQUEDA DE DÍAS (Prioridad: Alquiler de contador)
+        # --- BUSQUEDA EXACTA DE DÍAS SEGÚN TU TEXTO ---
         match_dias_alquiler = re.search(r'Alquiler\s+de\s+contador\s+(\d+)\s+días', texto_completo, re.IGNORECASE)
         if match_dias_alquiler:
             dias = int(match_dias_alquiler.group(1))
@@ -208,6 +208,7 @@ def extraer_datos_factura(pdf_path):
         "Total Real": round(total_real, 2)
     }
 
+# El código de Streamlit inferior se mantiene exactamente igual
 st.set_page_config(page_title="Comparador Energético", layout="wide")
 st.title("⚡ Comparador de Facturas Eléctricas Pro")
 
