@@ -327,9 +327,33 @@ else:
                 with c1: st.success(f"La mejor compañía es: **{mejor_opcion_nombre}**")
                 with c2: st.metric(label="Ahorro Total Acumulado", value=f"{ahorro_total} €")
 
-                # --- BOTÓN DE WHATSAPP ---
+                # --- BOTÓN DE WHATSAPP GRANDE PERSONALIZADO ---
                 msg = f"Hola! He usado tu comparador y he visto que puedo ahorrar {ahorro_total}€ con la compañía {mejor_opcion_nombre}. Me gustaría cambiarme."
-                st.link_button("🚀 ¡CÁMBIATE DE COMPAÑÍA AHORA!", f"https://wa.me/4915154663318?text={msg.replace(' ', '%20')}", use_container_width=True)
+                url_whatsapp = f"https://wa.me/4915154663318?text={msg.replace(' ', '%20')}"
+                
+                st.markdown(
+                    f"""
+                    <a href="{url_whatsapp}" target="_blank" style="text-decoration: none;">
+                        <div style="
+                            background-color: #25D366;
+                            color: white;
+                            padding: 20px;
+                            text-align: center;
+                            border-radius: 15px;
+                            font-size: 24px;
+                            font-weight: bold;
+                            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+                            margin: 20px 0;
+                            transition: transform 0.2s;
+                        " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                            🚀 ¡CÁMBIATE DE COMPAÑÍA AHORA!
+                            <br>
+                            <span style="font-size: 16px; font-weight: normal;">Contactar por WhatsApp para tramitar el ahorro</span>
+                        </div>
+                    </a>
+                    """,
+                    unsafe_allow_html=True
+                )
 
             st.subheader("📊 Comparativa Detallada por Factura")
             
