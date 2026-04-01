@@ -246,7 +246,7 @@ def extraer_datos_factura(pdf_path):
 
 # --- Código Streamlit ---
 st.set_page_config(page_title="Comparador Energético", layout="wide")
-st.title("⚡ Comparador Energetika de Facturas Eléctricas")
+st.title("⚡ Comparador de Facturas Eléctricas Pro")
 
 excel_path = "tarifas_companias.xlsx"
 
@@ -314,7 +314,8 @@ else:
             df_comp = df_comp.sort_values(by=["Mes/Fecha", "Ahorro"], ascending=[True, False])
             
             df_solo_ofertas = df_comp[~df_comp["Compañía/Tarifa"].str.contains("📍 TU FACTURA")]
-            ranking_total = df_solo_ofertas.groupby("Compañía/Tarifa")["Ahorro"].sum().reset_index()
+            # Agrupamos para obtener ahorro total y suma de días analizados
+            ranking_total = df_solo_ofertas.groupby("Compañía/Tarifa").agg({'Ahorro': 'sum', 'Dias_Factura': 'sum'}).reset_index()
             ranking_total = ranking_total.sort_values(by="Ahorro", ascending=False)
 
             st.divider()
@@ -322,7 +323,6 @@ else:
             if not ranking_total.empty:
                 st.subheader("🏆 TOP 3 - Mejores Opciones de Ahorro")
                 
-                # CSS para el botón verde personalizado
                 st.markdown("""
                     <style>
                     .whatsapp-button {
@@ -345,19 +345,23 @@ else:
                     </style>
                 """, unsafe_allow_html=True)
 
-                # Tomamos las 3 mejores opciones
                 top_3 = ranking_total.head(3)
                 cols_top = st.columns(len(top_3))
 
                 for i, (idx, row) in enumerate(top_3.iterrows()):
                     nombre_cia = row['Compañía/Tarifa']
-                    ahorro_val = round(row['Ahorro'], 2)
+                    ahorro_total = round(row['Ahorro'], 2)
+                    dias_totales = row['Dias_Factura'] if row['Dias_Factura'] > 0 else 30
+                    
+                    # Cálculo Ahorro Anual: (Ahorro / Días) * 365 * 1.21 (IVA)
+                    ahorro_anual = round((ahorro_total / dias_totales) * 365 * 1.21, 2)
                     
                     with cols_top[i]:
-                        st.metric(label=f"Opción {i+1}", value=f"{ahorro_val} €", delta="Ahorro Total")
+                        st.metric(label=f"Opción {i+1}", value=f"{ahorro_total} €", delta="Ahorro en Factura")
+                        st.metric(label="Estimación Ahorro Anual (IVA inc.)", value=f"{ahorro_anual} €")
                         st.write(f"**Compañía:** {nombre_cia}")
                         
-                        msg = f"Hola! He usado tu comparador y he visto que puedo ahorrar {ahorro_val}€ con la compañía {nombre_cia}. Me gustaría cambiarme."
+                        msg = f"Hola! He usado tu comparador y he visto que puedo ahorrar {ahorro_total}€ (aprox. {ahorro_anual}€ al año) con la compañía {nombre_cia}. Me gustaría cambiarme."
                         url_whatsapp = f"https://wa.me/4915154663318?text={msg.replace(' ', '%20')}"
                         
                         st.markdown(f'<a href="{url_whatsapp}" target="_blank" class="whatsapp-button">CAMBIARME A ESTA COMPAÑÍA</a>', unsafe_allow_html=True)
