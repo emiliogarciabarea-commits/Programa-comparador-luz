@@ -207,19 +207,16 @@ def extraer_datos_factura(pdf_path):
         if es_xxi: compania = "Energía XXI"
         
         # --- BÚSQUEDA DE FECHA ULTRA-ROBUSTA ---
-        # Busca el texto y captura la fecha entre paréntesis (formato: Lectura actual (real) (14 de marzo de 2026))
         m_fecha = re.search(r'Lectura.*?actual.*?real.*?(\d{1,2}.*?\d{4})', texto_completo, re.IGNORECASE)
         fecha = m_fecha.group(1).strip() if m_fecha else "No encontrada"
 
         # --- BÚSQUEDA DE TOTAL REAL (SUMA POTENCIA + ENERGIA) ---
-        # Localiza la palabra clave y captura el primer número decimal que aparezca después (ignora puntos de relleno)
         m_p_eur = re.search(r'potencia.*?contratada.*?(\d+[\d,.]*)', texto_completo, re.IGNORECASE)
         m_e_eur = re.search(r'energ[íi]a.*?consumida.*?(\d+[\d,.]*)', texto_completo, re.IGNORECASE)
         
         if m_p_eur and m_e_eur:
             total_real = float(m_p_eur.group(1).replace(',', '.')) + float(m_e_eur.group(1).replace(',', '.'))
         else:
-            # Fallback a la fila de "Facturación por potencia contratada" si el resumen falla
             m_alt = re.search(r'Facturaci[oó]n.*?potencia.*?contratada.*?(\d+[\d,.]*)', texto_completo, re.IGNORECASE)
             total_real = float(m_alt.group(1).replace(',', '.')) if m_alt else 0.0
 
@@ -282,7 +279,8 @@ else:
             df_resumen_pdfs = df_resumen_pdfs[cols]
 
             with st.expander("🔍 Ver y corregir datos extraídos", expanded=True):
-                df_resumen_pdfs = st.data_editor(df_resumen_pdfs, use_container_width=True, hide_index=True)
+                # Se añade column_order para mantener las columnas fijas
+                df_resumen_pdfs = st.data_editor(df_resumen_pdfs, use_container_width=True, hide_index=True, column_order=cols)
 
             df_tarifas = pd.read_excel(excel_path)
             resultados_finales = []
@@ -363,10 +361,7 @@ else:
                     ahorro_total = round(row['Ahorro'], 2)
                     dias_totales = int(row['Dias_Factura']) if row['Dias_Factura'] > 0 else 30
                     
-                    # Cálculo Ahorro Anual: (Ahorro / Días) * 365 * 1.21 (IVA)
                     ahorro_anual = round((ahorro_total / dias_totales) * 365 * 1.21, 2)
-                    
-                    # Lógica de color: si el ahorro es negativo, poner delta en rojo ("inverse")
                     color_metrica = "inverse" if ahorro_total < 0 else "normal"
                     
                     with cols_top[i]:
