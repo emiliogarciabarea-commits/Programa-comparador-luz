@@ -134,7 +134,7 @@ def extraer_datos_factura(pdf_path):
             m_total_elec = re.search(r'Total\s+electricidad\s*([\d,.]+)\s*€', texto_completo, re.IGNORECASE)
             total_real = float(m_total_elec.group(1).replace(',', '.')) if m_total_elec else 0.0
 
-   elif es_endesa_luz:
+    elif es_endesa_luz:
         compania = "Endesa Energía"
         # Fecha de emisión
         m_fecha_etiqueta = re.search(r'Fecha.*?emisi.*?([\d/]{8,10})', texto_completo, re.IGNORECASE | re.DOTALL)
