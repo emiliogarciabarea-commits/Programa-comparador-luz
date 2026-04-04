@@ -134,35 +134,61 @@ def extraer_datos_factura(pdf_path):
             m_total_elec = re.search(r'Total\s+electricidad\s*([\d,.]+)\s*€', texto_completo, re.IGNORECASE)
             total_real = float(m_total_elec.group(1).replace(',', '.')) if m_total_elec else 0.0
 
-    elif es_endesa_luz:
+   elif es_endesa_luz:
         compania = "Endesa Energía"
-        m_fecha_etiqueta = re.search(r'Fecha\s+emisión\s+factura:\s*([\d/]{10})', texto_completo, re.IGNORECASE)
+        # Fecha de emisión
+        m_fecha_etiqueta = re.search(r'Fecha.*?emisi.*?([\d/]{8,10})', texto_completo, re.IGNORECASE | re.DOTALL)
         fecha = m_fecha_etiqueta.group(1) if m_fecha_etiqueta else "No encontrada"
+        
+        # Días de facturación
         m_dias = re.search(r'(\d+)\s+días', texto_completo, re.IGNORECASE)
         dias = int(m_dias.group(1)) if m_dias else 0
+        
+        # Potencia contratada
         m_pot = re.search(r'punta-llano\s*([\d,.]+)\s*kW', texto_completo, re.IGNORECASE)
         potencia = float(m_pot.group(1).replace(',', '.')) if m_pot else 0.0
         
         def limpiar_valor_endesa(patron, texto):
             match = re.search(patron, texto, re.IGNORECASE)
             if match:
+                # Quitamos puntos de miles y cambiamos coma por punto decimal
                 valor_sucio = match.group(1).replace(" ", "").replace(".", "").replace(",", ".")
                 try: return float(valor_sucio)
                 except: return 0.0
             return 0.0
 
         val_potencia = limpiar_valor_endesa(r'Potencia\s+\.+\s*([\d\s.,]+)€', texto_completo)
-        val_energia = limpiar_valor_endesa(r'Energía\s+\.+\s*([\d\s.,]+)€', texto_completo)
+        
+        # Aislamiento del bloque de Energía kWh para no leer la tabla de Potencia kW
+        bloque_energia_match = re.search(r'Energ[ií]a\s+kWh(.*?)(?:Potencia\s+kW|$)', texto_completo, re.DOTALL | re.IGNORECASE)
+        texto_solo_kwh = bloque_energia_match.group(1) if bloque_energia_match else texto_completo
+        
+        val_energia = limpiar_valor_endesa(r'Energ[ií]a(?:\s+consumida(?:\s+de\s+la\s+red)?)?[\s.]*([\d\s.,]+)€', texto_completo)
         total_real = val_potencia + val_energia
-        m_punta = re.search(r'Punta\s+[\d,.]+\s+[\d,.]+\s+[\d,.]+\s+[\w,.]+\s+([\d,.]+)', texto_completo, re.IGNORECASE)
-        m_llano = re.search(r'Llano\s+[\d,.]+\s+[\d,.]+\s+[\d,.]+\s+[\w,.]+\s+([\d,.]+)', texto_completo, re.IGNORECASE)
-        m_valle = re.search(r'Valle\s+[\d,.]+\s+[\d,.]+\s+[\d,.]+\s+[\w,.]+\s+([\d,.]+)', texto_completo, re.IGNORECASE)
+
+        # --- CORRECCIÓN DE CONSUMOS ---
+        # Buscamos la palabra y capturamos el último número de la línea DENTRO DEL BLOQUE de kWh
+        m_punta = re.search(r'^Punta.*\s+([\d,.]+)$', texto_solo_kwh, re.MULTILINE | re.IGNORECASE)
+        m_llano = re.search(r'^Llano.*\s+([\d,.]+)$', texto_solo_kwh, re.MULTILINE | re.IGNORECASE)
+        m_valle = re.search(r'^Valle.*\s+([\d,.]+)$', texto_solo_kwh, re.MULTILINE | re.IGNORECASE)
+        
+        # Si no encuentra por línea completa, intentamos una versión más flexible dentro del bloque
+        if not m_punta:
+            m_punta = re.search(r'Punta(?:\s+[\d,.-]+){4}\s+([\d,.]+)', texto_solo_kwh)
+        if not m_llano:
+            m_llano = re.search(r'Llano(?:\s+[\d,.-]+){4}\s+([\d,.]+)', texto_solo_kwh)
+        if not m_valle:
+            m_valle = re.search(r'Valle(?:\s+[\d,.-]+){4}\s+([\d,.]+)', texto_solo_kwh)
+
         consumos = {
             'punta': float(m_punta.group(1).replace(',', '.')) if m_punta else 0.0,
             'llano': float(m_llano.group(1).replace(',', '.')) if m_llano else 0.0,
             'valle': float(m_valle.group(1).replace(',', '.')) if m_valle else 0.0
         }
-        excedente = 0.0
+
+        # Captura de excedentes (importante para facturas con Solar)
+        m_exc = re.search(r'Energia\s+vertida\s+a\s+la\s+red\s+([\d,.]+)\s+kWh', texto_completo, re.IGNORECASE)
+        excedente = float(m_exc.group(1).replace(',', '.')) if m_exc else 0.0
 
     elif es_repsol:
         compania = "Repsol"
