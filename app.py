@@ -71,7 +71,7 @@ def extraer_datos_factura(pdf_path):
         m_exc = re.search(r'Excedentes.*?([\d,.]+)\s*kWh', texto_completo, re.IGNORECASE)
         excedente = float(m_exc.group(1).replace(',', '.')) if m_exc else 0.0
 
-   elif es_total_energies:
+    elif es_total_energies:
         compania = "TotalEnergies"
         m_fecha = re.search(r'Fecha\s+emisión:\s*([\d.]{10})', texto_completo, re.IGNORECASE)
         fecha = m_fecha.group(1) if m_fecha else "No encontrada"
