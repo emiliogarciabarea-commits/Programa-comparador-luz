@@ -409,16 +409,14 @@ else:
 
             st.divider()
             
-            if not ranking_total.empty:
+           if not ranking_total.empty:
     st.subheader("🏆 TOP 3 - Mejores Opciones de Ahorro")
     
-    # Definimos ambos estilos en el CSS
     st.markdown("""
         <style>
         .whatsapp-button {
             display: inline-block;
             width: 100%;
-            background-color: #25D366; /* Verde original */
             color: white !important;
             padding: 12px;
             text-align: center;
@@ -429,26 +427,10 @@ else:
             margin-top: 10px;
             border: none;
         }
+        /* El hover lo mantenemos general o podrías quitarlo si prefieres inline */
         .whatsapp-button:hover {
-            background-color: #128C7E;
-        }
-        /* Nueva clase para ahorro negativo */
-        .whatsapp-button-red {
-            display: inline-block;
-            width: 100%;
-            background-color: #FF4B4B; /* Rojo */
-            color: white !important;
-            padding: 12px;
-            text-align: center;
+            opacity: 0.8;
             text-decoration: none;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
-            margin-top: 10px;
-            border: none;
-        }
-        .whatsapp-button-red:hover {
-            background-color: #D32F2F;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -461,18 +443,19 @@ else:
         ahorro_total = round(row['Ahorro'], 2)
         dias_totales = int(row['Dias_Factura']) if row['Dias_Factura'] > 0 else 30
         
-        ahorro_anual = round((ahorro_total / d分割ias_totales) * 365 * 1.21, 2)
+        ahorro_anual = round((ahorro_total / dias_totales) * 365 * 1.21, 2)
         
-        # Lógica de colores
+        # --- LÓGICA DE COLOR DINÁMICO ---
         if ahorro_total < 0:
-            color_metrica = "inverse"
-            clase_boton = "whatsapp-button-red"
+            color_fondo = "#FF4B4B"  # Rojo (Streamlit Red)
             texto_boton = "PLAN NO RECOMENDADO" # Opcional: cambiar el texto si es negativo
+            color_metrica = "inverse"
         else:
-            color_metrica = "normal"
-            clase_boton = "whatsapp-button"
+            color_fondo = "#25D366"  # Verde WhatsApp
             texto_boton = "CAMBIARME A ESTA COMPAÑÍA"
-        
+            color_metrica = "normal"
+        # -------------------------------
+
         with cols_top[i]:
             st.metric(
                 label=f"Ahorro en {dias_totales} días", 
@@ -487,11 +470,15 @@ else:
             )
             st.write(f"**Compañía:** {nombre_cia}")
             
-            msg = f"Hola! He usado el comparador de Energetika y he visto que puedo ahorrar {ahorro_total}€ en {dias_totales} días (aprox. {ahorro_anual}€ al año) con la compañía {nombre_cia}. Me gustaría cambiarme."
+            msg = f"Hola! He usado el comparador de Energetika y he visto que el ahorro es de {ahorro_total}€ en {dias_totales} días con la compañía {nombre_cia}."
             url_whatsapp = f"https://wa.me/34614676150?text={msg.replace(' ', '%20')}"
             
-            # Usamos la variable clase_boton para decidir el color
-            st.markdown(f'<a href="{url_whatsapp}" target="_blank" class="{clase_boton}">{texto_boton}</a>', unsafe_allow_html=True)
+            # Aplicamos el style="background-color: {color_fondo}" dinámicamente
+            st.markdown(
+                f'''<a href="{url_whatsapp}" target="_blank" class="whatsapp-button" 
+                style="background-color: {color_fondo};">{texto_boton}</a>''', 
+                unsafe_allow_html=True
+            )
 
             st.divider()
             st.subheader("📊 Comparativa Detallada por Factura")
