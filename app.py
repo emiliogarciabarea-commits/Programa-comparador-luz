@@ -450,9 +450,9 @@ else:
                         texto_boton = "PLAN NO RECOMENDADO" # Opcional: cambiar el texto si es negativo
                         color_metrica = "inverse"
                     else:
-                    color_fondo = "#25D366"  # Verde WhatsApp
-                    texto_boton = "CAMBIARME A ESTA COMPAÑÍA"
-                    color_metrica = "normal"
+                        color_fondo = "#25D366"  # Verde WhatsApp
+                        texto_boton = "CAMBIARME A ESTA COMPAÑÍA"
+                        color_metrica = "normal"
                     
                     with cols_top[i]:
                         st.metric(
