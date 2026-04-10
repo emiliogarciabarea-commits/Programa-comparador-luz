@@ -331,9 +331,9 @@ st.set_page_config(page_title="Comparador Energético", layout="wide")
 
 # --- BLOQUE DEL LOGO ---
 if os.path.exists("Logo_Energetika.png"):
-    st.image("Logo_Energetika.png", width=320)
+    st.image("Logo_Energetika.png", width=300)
 
-st.title("⚡ Comparador Energetika de Facturas Eléctricas")
+st.markdown("### ⚡ Comparador Energetika de Facturas Eléctricas")
 
 excel_path = "tarifas_companias.xlsx"
 
