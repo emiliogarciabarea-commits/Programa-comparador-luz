@@ -459,7 +459,7 @@ else:
                             # Inyectamos CSS solo para el color del borde de este contenedor específico
                             st.markdown(f"""<style>
                                 [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) {{
-                                    border: 2px solid {color_fondo} !important;
+                                    border: 3px solid {color_fondo} !important;
                                     background-color: #1a1a1a;
                                 }}
                             </style><div class="marco-{i}"></div>""", unsafe_allow_html=True)
@@ -472,7 +472,7 @@ else:
                             url_whatsapp = f"https://wa.me/34614676150?text={msg.replace(' ', '%20')}"
                             
                             st.markdown(f'''<a href="{url_whatsapp}" target="_blank" style="text-decoration: none;">
-                                <div style="background-color: {color_fondo}; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold; margin-top: 10px; margin-bottom: 15px;
+                                <div style="background-color: {color_fondo}; padding: 12px; border: 3px solid; text-align: center; border-radius: 8px; font-weight: bold; margin-top: 10px; margin-bottom: 15px;
                                 color: #000000;">
                                 {texto_boton}
                             </div>
