@@ -429,7 +429,7 @@ else:
                         border: none;
                     }
                     .whatsapp-button:hover {
-                        background-color: #128C7E;
+                        filter: brightness(90%);
                     }
                     </style>
                 """, unsafe_allow_html=True)
