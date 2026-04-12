@@ -358,6 +358,7 @@ else:
             cols = ["Compañía", "Fecha", "Días", "Potencia (kW)", "Consumo Punta (kWh)", "Consumo Llano (kWh)", "Consumo Valle (kWh)", "Excedente (kWh)", "Total Real", "Archivo"]
             df_resumen_pdfs = df_resumen_pdfs[cols]
 
+            df_temporal = df_resumen_pdfs.copy()
             with st.expander("🔍 Ver y corregir datos extraídos", expanded=True):
     # Asegúrate de haber copiado el df antes del bucle: df_temporal = df_resumen_pdfs.copy()
     
@@ -378,8 +379,7 @@ else:
                         df_temporal.at[i, "Consumo Punta (kWh)"] = c1.number_input("Punta", value=float(row["Consumo Punta (kWh)"]), key=f"punta_{i}")
                         df_temporal.at[i, "Consumo Llano (kWh)"] = c2.number_input("Llano", value=float(row["Consumo Llano (kWh)"]), key=f"llano_{i}")
                         df_temporal.at[i, "Consumo Valle (kWh)"] = c3.number_input("Valle", value=float(row["Consumo Valle (kWh)"]), key=f"valle_{i}")
-                        # AQUÍ ESTABA EL FALLO: faltaba capturar el excedente
-                    df_temporal.at[i, "Excedente (kWh)"] = c4.number_input("Excedente", value=float(row["Excedente (kWh)"]), key=f"exce_{i}")
+                        df_temporal.at[i, "Excedente (kWh)"] = c4.number_input("Excedente", value=float(row["Excedente (kWh)"]), key=f"exce_{i}")
                         
                     df_temporal.at[i, "Total Real"] = st.number_input("Total Real (€)", value=float(row["Total Real"]), key=f"total_{i}")
             
