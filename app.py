@@ -469,7 +469,8 @@ else:
                                 st.markdown(f"""
                                     <div style="
                                         display: flex;
-                                        font-weight: bold; 
+                                        font-weight: bold;
+                                        margin-left: 60px
                                         font-size: 20px; 
                                         margin-bottom: 20px; 
                                         color: {color_fondo};
