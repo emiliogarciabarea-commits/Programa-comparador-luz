@@ -422,9 +422,9 @@ else:
                         text-decoration: none;
                         font-size: 16px;
                         font-weight: bold;
-                        border-radius: 10px;
+                        border-radius: 8px;
                         margin-top: 10px;
-                        border: 10px solid #FFFFFF !important;
+                        border: none;
                     }
                     .whatsapp-button:hover {
                         filter: brightness(90%);
@@ -435,17 +435,6 @@ else:
                 top_3 = ranking_total.head(3)
                 cols_top = st.columns(len(top_3))
                 colores_top = ["#25D366", "#FFD700", "#FF8C00"] # Verde, Amarillo, Naranja
-                st.markdown("""
-                    <style>
-                    /* Esto encuentra los contenedores con borde y les cambia el estilo */
-                    div[data-testid="stContainer"]:has(div[data-testid="stMetric"]) {
-                        background-color: #1a1a1a !important;
-                        border: 4px solid #FFFFFF !important;
-                        border-radius: 20px !important;
-                        padding: 20px !important;
-                    }
-                    </style>
-                """, unsafe_allow_html=True)
                                 
                 for i, (idx, row) in enumerate(top_3.iterrows()):
                     nombre_cia = row['Compañía/Tarifa']
@@ -466,7 +455,15 @@ else:
         
                     with cols_top[i]:
                         # Usamos el contenedor nativo de Streamlit con borde
-                        with st.container(border=True):                       
+                        with st.container(border=True):
+                            # Inyectamos CSS solo para el color del borde de este contenedor específico
+                            st.markdown(f"""<style>
+                                [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) {{
+                                    border: 2px solid {color_fondo} !important;
+                                    background-color: #1a1a1a;
+                                }}
+                            </style><div class="marco-{i}"></div>""", unsafe_allow_html=True)
+                            
                             st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta=f"Opción {i+1}", delta_color=color_metrica)
                             st.metric(label="Estimación Ahorro Anual (IVA inc.)", value=f"{ahorro_anual} €", delta_color=color_metrica)
                             st.write(f"**Compañía:** {nombre_cia}")
@@ -474,13 +471,13 @@ else:
                             msg = f"Hola! He usado el comparador de Energetika y he visto que puedo ahorrar {ahorro_total}€ en {dias_totales} días (aprox. {ahorro_anual}€ al año) con la compañía {nombre_cia}. Me gustaría cambiarme."
                             url_whatsapp = f"https://wa.me/34614676150?text={msg.replace(' ', '%20')}"
                             
-                            st.markdown(f'''
-                                <a href="{url_whatsapp}" target="_blank" style="text-decoration: none;">
-                                    <div style="background-color: {color_fondo}; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold; margin-top: 10px; color: #000000;">
-                                        {texto_boton}
-                                    </div>
-                                </a>
-                            ''', unsafe_allow_html=True)
+                            st.markdown(f'''<a href="{url_whatsapp}" target="_blank" style="text-decoration: none;">
+                                <div style="background-color: {color_fondo}; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold; margin-top: 10px; margin-bottom: 15px;
+                                color: #000000;">
+                                {texto_boton}
+                            </div>
+                            </a>''', unsafe_allow_html=True)
+                            st.markdown("</div>", unsafe_allow_html=True)
    
                             
             st.divider()
@@ -503,5 +500,6 @@ else:
 
             
 
+            
             
             
