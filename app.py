@@ -437,13 +437,12 @@ else:
                 colores_top = ["#25D366", "#FFD700", "#FF8C00"] # Verde, Amarillo, Naranja
                 st.markdown("""
                     <style>
-                    /* Estilo del contenedor principal */
-                    .marco-personalizado {
+                    /* Esto encuentra los contenedores con borde y les cambia el estilo */
+                    div[data-testid="stContainer"]:has(div[data-testid="stMetric"]) {
                         background-color: #1a1a1a !important;
+                        border: 4px solid #FFFFFF !important;
                         border-radius: 20px !important;
                         padding: 20px !important;
-                        border: 4px solid #FFFFFF !important; /* Aquí controlas el grosor */
-                        margin-bottom: 20px;
                     }
                     </style>
                 """, unsafe_allow_html=True)
