@@ -434,6 +434,18 @@ else:
 
                 top_3 = ranking_total.head(3)
                 cols_top = st.columns(len(top_3))
+                st.markdown("""
+                    <style>
+                    .custom-box {
+                        border: 8px solid #FFFFFF !important;
+                        border-radius: 20px !important;
+                        padding: 20px !important;
+                        background-color: #1a1a1a !important;
+                        height: 100% !important;
+                    }
+                    </style>
+                """, unsafe_allow_html=True)
+                
                 colores_top = ["#25D366", "#FFD700", "#FF8C00"] # Verde, Amarillo, Naranja
                                 
                 for i, (idx, row) in enumerate(top_3.iterrows()):
@@ -457,16 +469,7 @@ else:
                         # Usamos el contenedor nativo de Streamlit con borde
                         with st.container(border=True):
                             # Inyectamos CSS solo para el color del borde de este contenedor específico
-                            st.markdown(f"""<style>
-                            [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) > div:first-child {{
-                                border: 6px solid {color_fondo} !important;
-                                border-radius: 20px !important;
-                            }}
-                            [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) {{
-                                background-color: #1a1a1a;
-                                border: 6px solid {color_fondo} !important; /* Eliminamos el borde por defecto para que solo mande el nuestro */
-                            }}
-                            </style><div class="marco-{i}"></div>""", unsafe_allow_html=True)
+                            st.markdown('<div class="custom-box">', unsafe_allow_html=True)
                             
                             st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta=f"Opción {i+1}", delta_color=color_metrica)
                             st.metric(label="Estimación Ahorro Anual (IVA inc.)", value=f"{ahorro_anual} €", delta_color=color_metrica)
