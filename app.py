@@ -435,9 +435,8 @@ else:
                 top_3 = ranking_total.head(3)
                 cols_top = st.columns(len(top_3))
 
-                # Definimos los colores para el TOP 3
                 colores_top = ["#25D366", "#FFD700", "#FF8C00"] # Verde, Amarillo, Naranja
-                
+                                
                 for i, (idx, row) in enumerate(top_3.iterrows()):
                     nombre_cia = row['Compañía/Tarifa']
                     ahorro_total = round(row['Ahorro'], 2)
@@ -445,18 +444,22 @@ else:
                     
                     ahorro_anual = round((ahorro_total / dias_totales) * 365 * 1.21, 2)
                     color_metrica = "inverse" if ahorro_total < 0 else "normal"
-
+                
                     if ahorro_total < 0:
-                        color_fondo = "#FF4B4B"  # Rojo (Streamlit Red)
-                        texto_boton = "PLAN NO RECOMENDADO" # Opcional: cambiar el texto si es negativo
+                        color_fondo = "#FF4B4B"  # Rojo
+                        texto_boton = "PLAN NO RECOMENDADO"
                         color_metrica = "inverse"
                     else:
-                        # Asignamos color según posición (0, 1, 2 -> Verde, Amarillo, Naranja)
                         color_fondo = colores_top[i]
                         texto_boton = "CAMBIARME A ESTA COMPAÑÍA"
                         color_metrica = "normal"
                     
                     with cols_top[i]:
+                        # Contenedor con marco (borde)
+                        st.markdown(f"""
+                            <div style="border: 2px solid {color_fondo}; border-radius: 15px; padding: 15px; background-color: #1a1a1a;">
+                            """, unsafe_allow_html=True)
+                        
                         st.metric(
                             label=f"Ahorro en {dias_totales} días", 
                             value=f"{ahorro_total} €", 
@@ -472,7 +475,7 @@ else:
                         
                         msg = f"Hola! He usado el comparador de Energetika y he visto que puedo ahorrar {ahorro_total}€ en {dias_totales} días (aprox. {ahorro_anual}€ al año) con la compañía {nombre_cia}. Me gustaría cambiarme."
                         url_whatsapp = f"https://wa.me/34614676150?text={msg.replace(' ', '%20')}"
-
+                
                         st.markdown(f'''<a href="{url_whatsapp}" target="_blank" style="text-decoration: none;">
                         <div style="background-color: {color_fondo}; 
                         padding: 12px; 
@@ -484,13 +487,14 @@ else:
                         </div>
                         </a>
                         ''', unsafe_allow_html=True)
-
-
+                        
+                        st.markdown("</div>", unsafe_allow_html=True) # Cierre del marco
+                
             st.divider()
             st.subheader("📊 Comparativa Detallada por Factura")
-            
+                
             df_mostrar = df_comp.drop(columns=['Dias_Factura'], errors='ignore')
-            
+                
             st.dataframe(
                 df_mostrar,
                 use_container_width=True,
@@ -503,3 +507,4 @@ else:
                     ),
                 }
             )
+                
