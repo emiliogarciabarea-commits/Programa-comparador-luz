@@ -473,7 +473,7 @@ else:
                         """, unsafe_allow_html=True)
                     
                     with cols_top[i]:
-                        st.markdown(f"""
+                            st.markdown(f"""
                             <div style="
                                 background-color: #D3D3D3; 
                                 border: 6px solid #FFFFFF; 
