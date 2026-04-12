@@ -457,7 +457,7 @@ else:
                     with cols_top[i]:
                         # Contenedor con marco (borde)
                         st.markdown(f"""
-                            <div style="border: 2px solid {color_fondo}; border-radius: 15px; padding: 20px; background-color: #1a1a1a;">
+                            <div style="border: 2px solid {color_fondo}; border-radius: 15px; padding: 20px; background-color: #1a1a1a; height: 100%;">
                             """, unsafe_allow_html=True)
                         
                         st.metric(
@@ -484,8 +484,9 @@ else:
                         font-weight: bold; 
                         border: none;">
                         <span style="color: #000000 !important;">{texto_boton}</span>
-                        </div>
+                            </div>
                         </a>
+                        </div>
                         ''', unsafe_allow_html=True)
                         
                         st.markdown("</div>", unsafe_allow_html=True) # Cierre del marco
