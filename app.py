@@ -460,7 +460,7 @@ else:
                             st.markdown(f"""<style>
                                 [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) {{
                                     border: 2px solid {color_fondo} !important;
-                                    background-color: #1a1a1a;
+                                    background-color: #D3D3D3;
                                 }}
                             </style><div class="marco-{i}"></div>""", unsafe_allow_html=True)
                             
