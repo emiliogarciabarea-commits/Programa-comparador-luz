@@ -474,7 +474,7 @@ else:
                                         margin-bottom: 20px; 
                                         color: {color_fondo};
                                                             ">
-                                        Opción {i+1}
+                                        OPCIÓN {i+1}
                                     </div>
                                 """, unsafe_allow_html=True)
                             st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta_color=color_metrica)
