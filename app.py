@@ -468,9 +468,10 @@ else:
                             with col_header:
                                 st.markdown(f"""
                                     <div style="
-                                        text-align: center; 
+                                        text-align: left; 
                                         font-weight: bold; 
-                                        font-size: 18px; 
+                                        font-size: 18px;
+                                        padding-left: 40px;
                                         margin-bottom: 15px; 
                                         color: {color_fondo};
                                     ">
