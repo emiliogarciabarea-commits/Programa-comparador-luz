@@ -455,24 +455,15 @@ else:
         
                     with cols_top[i]:
                         # Usamos el contenedor nativo de Streamlit con borde
-                            st.markdown("""
-                                <style>
-                                /* 1. Eliminamos el borde original de Streamlit para que no interfiera */
-                                [data-testid="stVerticalBlock"] > div.stContainer {
-                                    border: none !important; 
-                                    background-color: #D3D3D3 !important;
-                                    border-radius: 20px !important;
-                                    padding: 20px !important;
-                                    /* 2. Dibujamos NUESTRO borde como una sombra interna, esto NUNCA falla */
-                                    box-shadow: inset 0 0 0 10px #FFFFFF !important; 
-                                }
-                                
-                                /* Forzamos color negro a todo el contenido interno */
-                                [data-testid="stVerticalBlock"] > div.stContainer,
-                                [data-testid="stVerticalBlock"] > div.stContainer * {
-                                    color: #000000 !important;
-                                }
-                                </style>
+                            st.markdown(f"""
+                                <div style="
+                                    background-color: #D3D3D3; 
+                                    border: 10px solid #FFFFFF; 
+                                    border-radius: 20px; 
+                                    padding: 20px; 
+                                    color: #000000;
+                                    margin-bottom: 20px;
+                                ">
                             """, unsafe_allow_html=True)
                             
                             st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta=f"Opción {i+1}", delta_color=color_metrica)
