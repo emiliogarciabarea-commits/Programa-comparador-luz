@@ -463,8 +463,11 @@ else:
                                     background-color: #1a1a1a;
                                 }}
                             </style><div class="marco-{i}"></div>""", unsafe_allow_html=True)
-                            
-                            st.metric(delta=f"Opción {i+1}", label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta_color=color_metrica)
+                            # 1. Creamos una fila para "Opción X" y la centramos/alineamos
+                            col_header, col_empty = st.columns([0.3, 0.7]) # Ajusta 0.3 según prefieras el tamaño
+                            with col_header:
+                                st.markdown(f"**Opción {i+1}**")
+                            st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta_color=color_metrica)
                             st.metric(label="Estimación Ahorro Anual (IVA inc.)", value=f"{ahorro_anual} €", delta_color=color_metrica)
                             st.write(f"**Compañía:** {nombre_cia}")
                             
