@@ -417,8 +417,6 @@ else:
                     .whatsapp-button {
                         display: inline-block;
                         width: 100%;
-                        background-color: #25D366;
-                        color: white !important;
                         padding: 12px;
                         text-align: center;
                         text-decoration: none;
