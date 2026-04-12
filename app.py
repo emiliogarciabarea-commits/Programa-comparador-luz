@@ -457,7 +457,7 @@ else:
                     with cols_top[i]:
                         # Contenedor con marco (borde)
                         st.markdown(f"""
-                            <div style="border: 2px solid {color_fondo}; border-radius: 15px; padding: 15px; background-color: #1a1a1a;">
+                            <div style="border: 2px solid {color_fondo}; border-radius: 15px; padding: 20px; background-color: #1a1a1a;">
                             """, unsafe_allow_html=True)
                         
                         st.metric(
