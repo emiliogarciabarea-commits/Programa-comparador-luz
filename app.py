@@ -470,6 +470,7 @@ else:
                                     <div style="
                                         display: flex;
                                         font-weight: bold; 
+                                        padding-rigth: 1px
                                         font-size: 20px; 
                                         margin-bottom: 20px; 
                                         color: {color_fondo};
