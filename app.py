@@ -459,7 +459,7 @@ else:
                             # Inyectamos CSS solo para el color del borde de este contenedor específico
                             st.markdown(f"""<style>
                                 [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) {{
-                                    border: 3px solid {color_fondo} !important;
+                                    border: 10px solid #FFFFFF !important;
                                     background-color: #1a1a1a;
                                 }}
                             </style><div class="marco-{i}"></div>""", unsafe_allow_html=True)
