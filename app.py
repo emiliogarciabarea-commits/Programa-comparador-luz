@@ -461,7 +461,7 @@ else:
                             color: #000000 !important;
                             padding: 20px !important;
                             border-radius: 20px !important;
-                            border: 8px solid #FFFFFF !important;
+                            border: 3px solid #FFFFFF !important;
                         }
                         /* Forzar que los textos y métricas dentro del marco sean negros */
                         .marco-gris [data-testid="stMetricValue"], 
