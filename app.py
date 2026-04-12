@@ -476,19 +476,19 @@ else:
                             # Inyectamos CSS solo para el color del borde de este contenedor específico
                             with st.container(border=True):
                             
-                            st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta=f"Opción {i+1}", delta_color=color_metrica)
-                            st.metric(label="Estimación Ahorro Anual (IVA inc.)", value=f"{ahorro_anual} €", delta_color=color_metrica)
-                            st.write(f"**Compañía:** {nombre_cia}")
-                            
-                            msg = f"Hola! He usado el comparador de Energetika y he visto que puedo ahorrar {ahorro_total}€ en {dias_totales} días (aprox. {ahorro_anual}€ al año) con la compañía {nombre_cia}. Me gustaría cambiarme."
-                            url_whatsapp = f"https://wa.me/34614676150?text={msg.replace(' ', '%20')}"
-                            
-                            st.markdown(f'''<a href="{url_whatsapp}" target="_blank" style="text-decoration: none;">
-                                <div style="background-color: {color_fondo}; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold; margin-top: 10px; margin-bottom: 15px;
-                                color: #000000;">
-                                {texto_boton}
-                            </div>
-                            </a>''', unsafe_allow_html=True)
+                                st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta=f"Opción {i+1}", delta_color=color_metrica)
+                                st.metric(label="Estimación Ahorro Anual (IVA inc.)", value=f"{ahorro_anual} €", delta_color=color_metrica)
+                                st.write(f"**Compañía:** {nombre_cia}")
+                                
+                                msg = f"Hola! He usado el comparador de Energetika y he visto que puedo ahorrar {ahorro_total}€ en {dias_totales} días (aprox. {ahorro_anual}€ al año) con la compañía {nombre_cia}. Me gustaría cambiarme."
+                                url_whatsapp = f"https://wa.me/34614676150?text={msg.replace(' ', '%20')}"
+                                
+                                st.markdown(f'''<a href="{url_whatsapp}" target="_blank" style="text-decoration: none;">
+                                    <div style="background-color: {color_fondo}; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold; margin-top: 10px; margin-bottom: 15px;
+                                    color: #000000;">
+                                    {texto_boton}
+                                </div>
+                                </a>''', unsafe_allow_html=True)
                             
    
                             
