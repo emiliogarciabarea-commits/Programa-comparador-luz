@@ -422,7 +422,7 @@ else:
                         text-decoration: none;
                         font-size: 16px;
                         font-weight: bold;
-                        border-radius: 8px;
+                        border-radius: 10px;
                         margin-top: 10px;
                         border: none;
                     }
