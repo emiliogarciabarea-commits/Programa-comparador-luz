@@ -472,7 +472,7 @@ else:
                                         display: flex;
                                         text-align: center;
                                         font-weight: bold;
-                                        font-size: 20px; 
+                                        font-size: 24px; 
                                         margin-bottom: 20px; 
                                         color: {color_fondo};
                                                             ">
