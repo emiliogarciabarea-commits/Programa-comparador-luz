@@ -360,26 +360,31 @@ else:
 
             with st.expander("🔍 Ver y corregir datos extraídos", expanded=True):
                 # Definimos la configuración para desactivar la edición del orden
-                cols_header = st.columns(len(cols))
-                for idx, col_name in enumerate(cols):
-                    cols_header[idx].markdown(f"**{col_name}**")
-                df_temporal = df_resumen_pdfs.copy()
-                    
                 for i, row in df_resumen_pdfs.iterrows():
-                    cols_row = st.columns(len(cols))
-                        
-                        # Guardamos los valores editados directamente en el dataframe
-                    df_temporal.at[i, "Compañía"] = cols_row[0].text_input("", value=row["Compañía"], key=f"comp_{i}", label_visibility="collapsed")
-                    df_temporal.at[i, "Fecha"] = cols_row[1].text_input("", value=row["Fecha"], key=f"fecha_{i}", label_visibility="collapsed")
-                    df_temporal.at[i, "Días"] = cols_row[2].number_input("", value=int(row["Días"]), key=f"dias_{i}", label_visibility="collapsed")
-                    df_temporal.at[i, "Potencia (kW)"] = cols_row[3].number_input("", value=float(row["Potencia (kW)"]), key=f"pot_{i}", label_visibility="collapsed")
-                    df_temporal.at[i, "Consumo Punta (kWh)"] = cols_row[4].number_input("", value=float(row["Consumo Punta (kWh)"]), key=f"punta_{i}", label_visibility="collapsed")
-                    df_temporal.at[i, "Consumo Llano (kWh)"] = cols_row[5].number_input("", value=float(row["Consumo Llano (kWh)"]), key=f"llano_{i}", label_visibility="collapsed")
-                    df_temporal.at[i, "Consumo Valle (kWh)"] = cols_row[6].number_input("", value=float(row["Consumo Valle (kWh)"]), key=f"valle_{i}", label_visibility="collapsed")
-                    df_temporal.at[i, "Excedente (kWh)"] = cols_row[7].number_input("", value=float(row["Excedente (kWh)"]), key=f"exce_{i}", label_visibility="collapsed")
-                    df_temporal.at[i, "Total Real"] = cols_row[8].number_input("", value=float(row["Total Real"]), key=f"total_{i}", label_visibility="collapsed")
-                    df_temporal.at[i, "Archivo"] = cols_row[9].text_input("", value=row["Archivo"], key=f"arch_{i}", label_visibility="collapsed")
-                df_resumen_pdfs = df_temporal
+                    st.markdown(f"**Factura: {row['Archivo']}**")
+                    
+                    # En lugar de una fila única, creamos un contenedor que se adapta
+                    # Usamos 2 columnas para que en móvil sea legible
+                    col1, col2 = st.columns(2)
+                    
+                    # Ejemplo de distribución para que no se vea apelotonado
+                    df_temporal.at[i, "Compañía"] = col1.text_input("Compañía", value=row["Compañía"], key=f"comp_{i}")
+                    df_temporal.at[i, "Fecha"] = col2.text_input("Fecha", value=row["Fecha"], key=f"fecha_{i}")
+                    
+                    col3, col4 = st.columns(2)
+                    df_temporal.at[i, "Potencia (kW)"] = col3.number_input("Potencia (kW)", value=float(row["Potencia (kW)"]), key=f"pot_{i}")
+                    df_temporal.at[i, "Días"] = col4.number_input("Días", value=int(row["Días"]), key=f"dias_{i}")
+
+                    # Ponemos el resto de consumos en un bloque más claro
+                    with st.container():
+                        c1, c2, c3 = st.columns(3)
+                        df_temporal.at[i, "Consumo Punta (kWh)"] = c1.number_input("Punta", value=float(row["Consumo Punta (kWh)"]), key=f"punta_{i}")
+                        df_temporal.at[i, "Consumo Llano (kWh)"] = c2.number_input("Llano", value=float(row["Consumo Llano (kWh)"]), key=f"llano_{i}")
+                        df_temporal.at[i, "Consumo Valle (kWh)"] = c3.number_input("Valle", value=float(row["Consumo Valle (kWh)"]), key=f"valle_{i}")
+            
+                    # Finalizamos con datos financieros
+                    df_temporal.at[i, "Total Real"] = st.number_input("Total Real (€)", value=float(row["Total Real"]), key=f"total_{i}")
+        
                 #df_resumen_pdfs = st.data_editor(df_resumen_pdfs, use_container_width=True, hide_index=True, column_order=cols, column_config=column_config, key="tabla_fija_de_facturas" )
             if (df_resumen_pdfs["Potencia (kW)"] == 0).any() or (df_resumen_pdfs["Total Real"] == 0).any() or (df_resumen_pdfs["Días"] == 0).any():
                 st.warning("⚠️⚠️⚠️ Se han detectado valores nulos en la Potencia, en el Total Real y/o en el número de días de tu factura. Por favor, corrige manualmente los datos de tu factura en la tabla anterior para obtener un cálculo preciso. ⚠️⚠️⚠️")
