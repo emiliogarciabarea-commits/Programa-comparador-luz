@@ -478,8 +478,10 @@ else:
                         padding: 12px; 
                         text-align: center; 
                         border-radius: 8px; 
-                        font-weight: bold; 
-                        border: none;">
+                        font-weight: 800; 
+                        cursor: pointer;
+                        all: unset;
+                        display: block;">
                         <span style="color: #000000 !important;">{texto_boton}</span>
                         </div>
                         </a>
