@@ -457,16 +457,16 @@ else:
                         # Usamos el contenedor nativo de Streamlit con borde
                         with st.container(border=True):
                             # Inyectamos CSS solo para el color del borde de este contenedor específico
-                            st.markdown(f"""<style>
-                                [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) {{
-                                    background-color: #1a1a1a !important;
-                                    border: none !important;
-                                }}
-                                [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) > div:first-child {{
-                                    border: 8px solid #FFFFFF !important;
-                                    border-radius: 20px !important;
-                                }}
-                            </style><div class="marco-{i}"></div>""", unsafe_allow_html=True)
+                            st.markdown(f"""
+                            <div style="
+                                border: 8px solid #FFFFFF; 
+                                border-radius: 20px; 
+                                padding: 25px; 
+                                background-color: #1a1a1a; 
+                                color: white;
+                                margin-bottom: 20px;
+                            ">
+                            """, unsafe_allow_html=True)
                             
                             st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta=f"Opción {i+1}", delta_color=color_metrica)
                             st.metric(label="Estimación Ahorro Anual (IVA inc.)", value=f"{ahorro_anual} €", delta_color=color_metrica)
