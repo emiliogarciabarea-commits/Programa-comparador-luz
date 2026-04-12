@@ -486,12 +486,6 @@ else:
                         </a>
                         ''', unsafe_allow_html=True)
 
-                        st.markdown(f'''<a href="{url_whatsapp}" target="_blank" class="whatsapp-button" style="background-color: {color_fondo} !important; color: #000000 !important; 
-                        text-decoration: none !important; display: block !important; padding: 12px !important; text-align: center !important; border-radius: 8px !important; font-weight: bold !important;
-                        cursor: pointer !important;">
-                        {texto_boton}</a>
-                        ''', unsafe_allow_html=True)
-
 
             st.divider()
             st.subheader("📊 Comparativa Detallada por Factura")
