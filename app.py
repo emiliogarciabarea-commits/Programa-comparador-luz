@@ -359,8 +359,12 @@ else:
             df_resumen_pdfs = df_resumen_pdfs[cols]
 
             with st.expander("🔍 Ver y corregir datos extraídos", expanded=True):
-                # Se añade column_order para mantener las columnas fijas
-                df_resumen_pdfs = st.data_editor(df_resumen_pdfs, use_container_width=True, hide_index=True, column_order=cols)
+                # Definimos la configuración para desactivar la edición del orden
+                config = {
+                    col: st.column_config.Column(disabled=False) for col in cols
+                }
+                
+                df_resumen_pdfs = st.data_editor(df_resumen_pdfs, use_container_width=True, hide_index=True, column_order=cols, column_config=config)
             if (df_resumen_pdfs["Potencia (kW)"] == 0).any() or (df_resumen_pdfs["Total Real"] == 0).any() or (df_resumen_pdfs["Días"] == 0).any():
                 st.warning("⚠️⚠️⚠️ Se han detectado valores nulos en la Potencia, en el Total Real y/o en el número de días de tu factura. Por favor, corrige manualmente los datos de tu factura en la tabla anterior para obtener un cálculo preciso. ⚠️⚠️⚠️")
             
