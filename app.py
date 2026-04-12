@@ -458,11 +458,15 @@ else:
                         with st.container(border=True):
                             # Inyectamos CSS solo para el color del borde de este contenedor específico
                             st.markdown(f"""<style>
-                                [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) {{
-                                    border: 4px solid {color_fondo} !important;
-                                    background-color: #1a1a1a;
-                                }}
-                            </style><div class="marco-{i}"></div>""", unsafe_allow_html=True)
+                            [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) > div:first-child {{
+                                border: 6px solid {color_fondo} !important;
+                                border-radius: 20px !important;
+                            }}
+                            [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) {{
+                                background-color: #1a1a1a;
+                                border: none !important; /* Eliminamos el borde por defecto para que solo mande el nuestro */
+                            }}
+                        </style><div class="marco-{i}"></div>""", unsafe_allow_html=True)
                             
                             st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta=f"Opción {i+1}", delta_color=color_metrica)
                             st.metric(label="Estimación Ahorro Anual (IVA inc.)", value=f"{ahorro_anual} €", delta_color=color_metrica)
