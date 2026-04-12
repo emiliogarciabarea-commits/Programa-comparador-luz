@@ -434,7 +434,6 @@ else:
 
                 top_3 = ranking_total.head(3)
                 cols_top = st.columns(len(top_3))
-
                 colores_top = ["#25D366", "#FFD700", "#FF8C00"] # Verde, Amarillo, Naranja
                                 
                 for i, (idx, row) in enumerate(top_3.iterrows()):
@@ -455,7 +454,7 @@ else:
                         color_metrica = "normal"
                     
                     with cols_top[i]:
-                        # Contenedor con marco (borde)
+                        # Abrimos el marco UNA SOLA VEZ para todo el contenido
                         st.markdown(f"""
                             <div style="border: 2px solid {color_fondo}; border-radius: 15px; padding: 20px; background-color: #1a1a1a; height: 100%;">
                             """, unsafe_allow_html=True)
@@ -476,26 +475,20 @@ else:
                         msg = f"Hola! He usado el comparador de Energetika y he visto que puedo ahorrar {ahorro_total}€ en {dias_totales} días (aprox. {ahorro_anual}€ al año) con la compañía {nombre_cia}. Me gustaría cambiarme."
                         url_whatsapp = f"https://wa.me/34614676150?text={msg.replace(' ', '%20')}"
                 
-                        st.markdown(f'''<a href="{url_whatsapp}" target="_blank" style="text-decoration: none;">
-                        <div style="background-color: {color_fondo}; 
-                        padding: 12px; 
-                        text-align: center; 
-                        border-radius: 8px; 
-                        font-weight: bold; 
-                        border: none;">
-                        <span style="color: #000000 !important;">{texto_boton}</span>
+                        st.markdown(f'''
+                            <a href="{url_whatsapp}" target="_blank" style="text-decoration: none;">
+                                <div style="background-color: {color_fondo}; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold; border: none; margin-top: 15px;">
+                                    <span style="color: #000000 !important;">{texto_boton}</span>
+                                </div>
+                            </a>
                             </div>
-                        </a>
-                        </div>
-                        ''', unsafe_allow_html=True)
-                        
-                        st.markdown("</div>", unsafe_allow_html=True) # Cierre del marco
-                
+                            ''', unsafe_allow_html=True) # Cerramos el div aquí al final
+                            
             st.divider()
             st.subheader("📊 Comparativa Detallada por Factura")
-                
+                    
             df_mostrar = df_comp.drop(columns=['Dias_Factura'], errors='ignore')
-                
+                    
             st.dataframe(
                 df_mostrar,
                 use_container_width=True,
@@ -508,4 +501,5 @@ else:
                     ),
                 }
             )
-                
+
+            
