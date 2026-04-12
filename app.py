@@ -453,9 +453,9 @@ else:
                         color_metrica = "normal"
 
         
-                            with cols_top[i]:
+                    with cols_top[i]:
                         # Usamos el contenedor nativo de Streamlit con borde
-                                st.markdown(f"""
+                            st.markdown(f"""
                                     <div style='
                                         background-color: #D3D3D3; 
                                         border: 12px solid #FFFFFF; 
