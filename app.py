@@ -481,7 +481,7 @@ else:
                                 padding: 20px; 
                                 color: #000000;
                             ">
-                        """, unsafe_allow_html=True)
+                            """, unsafe_allow_html=True)
                             
                             st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta=f"Opción {i+1}", delta_color=color_metrica)
                             st.metric(label="Estimación Ahorro Anual (IVA inc.)", value=f"{ahorro_anual} €", delta_color=color_metrica)
