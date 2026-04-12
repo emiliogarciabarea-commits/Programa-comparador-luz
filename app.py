@@ -464,7 +464,7 @@ else:
                                 }}
                             </style><div class="marco-{i}"></div>""", unsafe_allow_html=True)
                             
-                            st.metric(label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta=f"Opción {i+1}", delta_color=color_metrica)
+                            st.metric(delta=f"Opción {i+1}", label=f"Ahorro en {dias_totales} días", value=f"{ahorro_total} €", delta_color=color_metrica)
                             st.metric(label="Estimación Ahorro Anual (IVA inc.)", value=f"{ahorro_anual} €", delta_color=color_metrica)
                             st.write(f"**Compañía:** {nombre_cia}")
                             
