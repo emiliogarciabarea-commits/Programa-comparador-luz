@@ -473,9 +473,7 @@ else:
                         msg = f"Hola! He usado el comparador de Energetika y he visto que puedo ahorrar {ahorro_total}€ en {dias_totales} días (aprox. {ahorro_anual}€ al año) con la compañía {nombre_cia}. Me gustaría cambiarme."
                         url_whatsapp = f"https://wa.me/34614676150?text={msg.replace(' ', '%20')}"
 
-                        color_negro_puro = "#000000"
-                        st.markdown(f'''<a href="{url_whatsapp}" target="_blank" class="whatsapp-button" style="background-color: {color_fondo} !important; color: {color_negro_puro} !important; 
-                        text-decoration: none !important; display: block !important;border: 1px solid #000000 !important;">
+                        st.markdown(f'''<a href="{url_whatsapp}" target="_blank" class="whatsapp-button" style="background-color: {color_fondo}; color: #000000 !important; font-weight: 800; opacity: 1 !important; text-decoration: none;">
                         {texto_boton}</a>
                         ''', unsafe_allow_html=True)
 
