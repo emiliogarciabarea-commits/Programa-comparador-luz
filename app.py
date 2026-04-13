@@ -359,7 +359,7 @@ else:
             df_resumen_pdfs = df_resumen_pdfs[cols]
 
             df_temporal = df_resumen_pdfs.copy()
-            with st.expander("🔍 Ver y corregir datos extraídos", expanded=True):
+            with st.expander("🔍 Ver y corregir datos extraídos", expanded=False):
                 nombres_facturas = df_resumen_pdfs['Archivo'].tolist()
                 tabs = st.tabs([f"Factura {i+1}" for i in range(len(nombres_facturas))])
             
