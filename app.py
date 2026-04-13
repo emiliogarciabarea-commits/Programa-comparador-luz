@@ -477,6 +477,11 @@ else:
                     dias_totales = int(row['Dias_Factura']) if row['Dias_Factura'] > 0 else 30      
                     ahorro_anual = round((ahorro_total / dias_totales) * 365 * 1.21, 2)
                     color_metrica = "inverse" if ahorro_total < 0 else "normal"
+                    #es lo que he anadido
+                    def obtener_logo(nombre_compania):
+                    # Esto busca un archivo como "logos/Iberdrola.png"
+                    ruta = f"logos/{nombre_compania.split()[0]}.png" 
+                    return ruta if os.path.exists(ruta) else None
                 
                     if ahorro_total < 0:
                         color_fondo = "#FF4B4B"  # Rojo
@@ -491,6 +496,12 @@ else:
                     with cols_top[i]:
                         # Usamos el contenedor nativo de Streamlit con borde
                         with st.container(border=True):
+                            #esto es lo que he anadido
+                            logo_path = obtener_logo(nombre_cia)
+                            if logo_path:
+                                st.image(logo_path, width=120) # Ajusta el ancho a tu gusto
+                            else:
+                                st.write(f"**{nombre_cia}**") # Si no hay logo, muestra el nombre
                             # Inyectamos CSS solo para el color del borde de este contenedor específico
                             st.markdown(f"""<style>
                                 [data-testid="stContainer"]:has(> div > div > div > .marco-{i}) {{
