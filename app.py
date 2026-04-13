@@ -480,8 +480,8 @@ else:
                     #es lo que he anadido
                     def obtener_logo(nombre_compania):
                     # Esto busca un archivo como "logos/Iberdrola.png"
-                    ruta = f"logos/{nombre_compania.split()[0]}.png" 
-                    return ruta if os.path.exists(ruta) else None
+                        ruta = f"logos/{nombre_compania.split()[0]}.png" 
+                        return ruta if os.path.exists(ruta) else None
                 
                     if ahorro_total < 0:
                         color_fondo = "#FF4B4B"  # Rojo
