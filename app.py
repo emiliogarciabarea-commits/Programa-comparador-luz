@@ -381,12 +381,12 @@ else:
                         
                         # Usamos columnas solo para lo esencial
                         c1, c2 = st.columns(2)
-                        df_temporal.at[i, "Consumo Punta (kWh)"] = c1.number_input("Punta", value=float(row["Consumo Punta (kWh)"]), key=f"punta_{i}")
-                        df_temporal.at[i, "Consumo Llano (kWh)"] = c2.number_input("Llano", value=float(row["Consumo Llano (kWh)"]), key=f"llano_{i}")
+                        df_temporal.at[i, "Consumo Punta (kWh)"] = c1.number_input("Consumo Punta (kWh)", value=float(row["Consumo Punta (kWh)"]), key=f"punta_{i}")
+                        df_temporal.at[i, "Consumo Llano (kWh)"] = c2.number_input("Consumo Llano (kWh)", value=float(row["Consumo Llano (kWh)"]), key=f"llano_{i}")
                         
                         c3, c4 = st.columns(2)
-                        df_temporal.at[i, "Consumo Valle (kWh)"] = c3.number_input("Valle", value=float(row["Consumo Valle (kWh)"]), key=f"valle_{i}")
-                        df_temporal.at[i, "Excedente (kWh)"] = c4.number_input("Excedente", value=float(row["Excedente (kWh)"]), key=f"exce_{i}")
+                        df_temporal.at[i, "Consumo Valle (kWh)"] = c3.number_input("Consumo Valle (kWh)", value=float(row["Consumo Valle (kWh)"]), key=f"valle_{i}")
+                        df_temporal.at[i, "Excedente (kWh)"] = c4.number_input("Excedente (kWh)", value=float(row["Excedente (kWh)"]), key=f"exce_{i}")
                         
                         df_temporal.at[i, "Total Real"] = st.number_input("Total Real (€)", value=float(row["Total Real"]), key=f"total_{i}")
             
