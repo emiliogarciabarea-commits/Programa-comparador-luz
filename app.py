@@ -507,7 +507,7 @@ else:
                         # Usamos el contenedor nativo de Streamlit con borde
                         with st.container(border=True):
                             #esto es lo que he anadido
-                            st.write(f"DEBUG: Buscando logo para: {nombre_cia.lower().split()[0]}") 
+                            #st.write(f"DEBUG: Buscando logo para: {nombre_cia.lower().split()[0]}") 
                             logo_path = obtener_logo(nombre_cia)
                             if logo_path:
                                 st.image(logo_path, width=120) # Ajusta el ancho a tu gusto
