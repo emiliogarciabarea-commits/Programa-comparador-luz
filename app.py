@@ -451,10 +451,10 @@ else:
             # --- FIN DEL FILTRO ---
 
             st.divider()
-                if not ranking_total.empty:
-                    st.subheader("🏆 TOP 3 - Mejores Opciones de Ahorro")
+            if not ranking_total.empty:
+                st.subheader("🏆 TOP 3 - Mejores Opciones de Ahorro")
                             
-                    st.markdown("""
+                st.markdown("""
                         <style>
                         .whatsapp-button {
                         display: inline-block;
