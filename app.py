@@ -522,8 +522,8 @@ else:
                                         display: flex;
                                         text-align: center;
                                         font-weight: bold;
-                                        font-size: 25px; 
-                                        margin-bottom: 15px; 
+                                        font-size: 26px; 
+                                        margin-bottom: 10px; 
                                         color: {color_fondo};
                                                             ">
                                         OPCIÓN {i+1}
