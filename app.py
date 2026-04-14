@@ -451,29 +451,28 @@ else:
             # --- FIN DEL FILTRO ---
 
             st.divider()
-            if not ranking_total.empty:
-                        if not ranking_total.empty:
-                            st.subheader("🏆 TOP 3 - Mejores Opciones de Ahorro")
+                if not ranking_total.empty:
+                    st.subheader("🏆 TOP 3 - Mejores Opciones de Ahorro")
                             
-                            st.markdown("""
-                                <style>
-                                .whatsapp-button {
-                                    display: inline-block;
-                                    width: 100%;
-                                    padding: 12px;
-                                    text-align: center;
-                                    text-decoration: none;
-                                    font-size: 16px;
-                                    font-weight: bold;
-                                    border-radius: 8px;
-                                    margin-top: 10px;
-                                    border: 3px;
-                                }
-                                .whatsapp-button:hover {
-                                    filter: brightness(90%);
-                                }
-                                </style>
-                            """, unsafe_allow_html=True)
+                    st.markdown("""
+                        <style>
+                        .whatsapp-button {
+                        display: inline-block;
+                        width: 100%;
+                        padding: 12px;
+                        text-align: center;
+                        text-decoration: none;
+                        font-size: 16px;
+                        font-weight: bold;
+                        border-radius: 8px;
+                        margin-top: 10px;
+                        border: 3px;
+                        }
+                        .whatsapp-button:hover {
+                            filter: brightness(90%);
+                        }
+                        </style>
+                    """, unsafe_allow_html=True)
 
                 top_3 = ranking_total.head(3)
                 cols_top = st.columns(len(top_3))
