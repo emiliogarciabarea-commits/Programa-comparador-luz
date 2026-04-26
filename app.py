@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 import io
 import os
+import sys
 
 # --- 2. LÓGICA DE KEEP-ALIVE (AQUÍ VA EL PING) ---
 if st.query_params.get("ping") == "true":
